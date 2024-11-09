@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aplicação web para gestão de gastos pessoais">
+    <meta name="keywords"
+        content="Aplicação web de finanças pessoais, gestão de finanças pessoais, mobile, app responsivo,responsividade, app web com bootstrap5 ,programação web">
+    <meta name="author" content="Daniel Lopes Bemfica">
+    <title>Controle de Gastos Diários</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="./css/style1.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</head>
+
+<body>
+    <div class="container mt-5">
+        <!-- Formulário de Entrada -->
+        <div class="card">
+            <div class="card-header text-center">
+                <h2>Controle de Gastos Diários</h2>
+            </div>
+            <div class="card-body">
+                <form id="gastoForm">
+                    <div class="mb-3">
+                        <div class="labelDoInput">
+                            <label for="meta" class="form-label">Meta de Economia (R$):</label><i id="metaHelp"
+                                class="bi-question-circle"></i>
+                            <audio src="./sound/audioConceitoMeta.mp3" id="som7" type="audio/mpeg">Seu navegador não é
+                                compatível com este tipo de arquivo de audio!</audio>
+                        </div>
+                        <div class="divDoInput">
+                            <input type="number" class="form-control" id="meta" required step="0.01" min="0">
+                            <i class="bi bi-eye" id="toggleMeta"></i>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="labelDoInput">
+                            <label for="recursos" class="form-label">Recursos Disponíveis (R$):</label><i
+                                id="receitaHelp" class="bi-question-circle"></i>
+                            <audio src="./sound/audioConceitoReceita.mp3" id="som8" type="audio/mpeg">Seu navegador não
+                                é
+                                compatível com este tipo de arquivo de audio!</audio>
+                        </div>
+                        <div class="divDoInput">
+                            <input type="number" class="form-control" id="recursos" required step="0.01" min="0">
+                            <i class="bi bi-eye" id="toggleReceita"></i>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="data" class="form-label">Data da Compra</label>
+                        <input type="date" class="form-control" id="data" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="labelDoInput">
+                            <label for="gasto" class="form-label">Gasto do Dia (R$):</label><i id="gastoDiaHelp"
+                                class="bi-question-circle"></i>
+                            <audio src="./sound/audioConceitoGastos.mp3" id="som9" type="audio/mpeg">Seu navegador não
+                                é
+                                compatível com este tipo de arquivo de audio!</audio>
+                        </div>
+                        <input type="number" class="form-control" id="gasto" required step="0.01" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="tipos" class="form-label">Tipo de gasto</label>
+                        <select class="form-select" name="tipos" id="tipos" aria-label="Selecionar tipo de gasto">
+                            <option selected disabled value="">Selecione o tipo de gasto...</option>
+                            <option value="carro">Carro</option>
+                            <option value="casa">Casa</option>
+                            <option value="educacao">Educação</option>
+                            <option value="familia">Família</option>
+                            <option value="lazer">Lazer</option>
+                            <option value="mercado">Mercado</option>
+                            <option value="outros">Outros</option>
+                            <option value="pessoal">Pessoal</option>
+                            <option value="saude">Saúde</option>
+                        </select>
+                    </div>
+
+                    <!--Card's de ajuda-->
+                    <!--Ajuda escrita campo meta-->
+                    <div class="card col-8 text-bg-primary ajudaEscrita" id="ajudaEscritaMeta">
+                        <div class="card-body">
+                            <h5 class="card-title">Campo Meta</h5>
+                            <p class="card-text">
+                                Ok! Este é o campo meta. Ele serve para você inserir um valor que deseja economizar <br>
+                                no final do mês. A qualquer momento, você poderá editá-lo para mais ou para menos
+                                conforme sua
+                                vontade. Mas lembre-se,<br>
+                                editando o valor da meta, serão alterados também os valores de Saldo Disponível Real<br>
+                                e quanto você poderá gastar por dia, para que possa atingir sua meta!
+                            </p>
+                            <button type="button" class="btn btn-info okButton">Ok</button>
+                        </div>
+                    </div>
+
+                    <!--Ajuda escrita campo receita-->
+                    <div class="card col-8 text-bg-primary ajudaEscrita" id="ajudaEscritaReceita">
+                        <div class="card-body">
+                            <h5 class="card-title">Campo Receita</h5>
+                            <p class="card-text">
+                                Em receita mensal disponível, você deverá inserir aquele valor com o qual você
+                                conclui<br>
+                                que realmente poderá contar com ele.<br>
+                                Ou seja, aquele valor líquido já descontadas as despesas fixas como água, energia
+                                elétrica
+                                e internet!
+                            </p>
+                            <button type="button" class="btn btn-info okButton">Ok</button>
+                        </div>
+                    </div>
+
+                    <!--Ajuda escrita campo Gasto do dia-->
+                    <div class="card col-8 text-bg-primary ajudaEscrita" id="ajudaEscritaGastoDoDia">
+                        <div class="card-body">
+                            <h5 class="card-title">Campo Gasto do Dia</h5>
+                            <p class="card-text">
+                                No campo gasto do dia, insira cada valor que você gastou durante o dia, pois este
+                                valor<br>
+                                será somado aos gastos totais salvos no seu browser, cujo cálculo, terá como
+                                resultante<br>
+                                o saldo disponível real e por sua vez, gerando a disponibilidade de gastos diários.
+                            </p>
+                            <button type="button" class="btn btn-info okButton">Ok</button>
+                        </div>
+                    </div>
+
+
+
+                    <button type="submit" class="btn btn-primary w-100" id="botaoLancar">Lançar Gastos</button>
+
+                    <audio src="./sound/chachRegister.mp3" id="som4" type="audio/mpeg">Seu navegador não é
+                        compatível com este tipo de arquivo de audio!</audio>
+                    <audio src="./sound/novoLimiteAudioVoice.mp3" id="som5" type="audio/mpeg">Seu navegador não é
+                        compatível com este tipo de arquivo de audio!</audio>
+                    <audio src="./sound/erroSoundMensAlert.mp3" id="somErro" type="audio/mpeg">Seu navegador não é
+                        compatível com este tipo de arquivo de audio!</audio>
+                </form>
+            </div>
+        </div>
+
+        <!-- Resumo -->
+        <div class="card mt-4">
+            <div class="card-body resumo">
+                <h5 class="card-title  text-bg-primary p-2 rounded">Resumo<i class="bi bi-eye text-bg-primary ms-4"
+                        id="ocultaMostraQsj"></i></h5>
+                <p id="saldoRestante" class="card-text"></p>
+                <p id="gastoDiario" class="card-text"></p>
+                <p id="diasRestantes" class="card-text"></p>
+            </div>
+        </div>
+        <!--*********************************************************-->
+        <!--Modal dos filtros para análise-->
+        <div class="modal fade" id="modalFilter" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-bg-primary p-2 rounded">Filtros para análise</h5>
+                    </div>
+                    <div class="modal-body">
+                        <label for="periodos" class="form-label">Período para análise</label>
+                        <select class="form-select form-select-sm" name="periodos" id="periodoFiltro"
+                            aria-label="Selecionar o nº de dias"
+                            title="Selecionar um período menor ou igual a data atual!">
+                            <option selected disabled value="">Selecione o nº de dias para análise...</option>
+                            <option value="7">7 dias</option>
+                            <option value="10">10 dias</option>
+                            <option value="15">15 dias</option>
+                            <option value="20">20 dias</option>
+                            <option value="30">30 dias</option>
+                        </select>
+
+                        <label for="categorias" class="form-label">Categoria de gasto</label>
+                        <select class="form-select" name="categorias" id="categoriaFiltro"
+                            aria-label="Selecionar tipo de categoria">
+                            <option selected disabled value="">Selecione a categoria de gasto...</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="btnGerarAnalise">Analisar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--************************************************************************-->
+        <!-- Modal do Dashboard -->
+        <div class="modal fade" id="financeDashboardModal" tabindex="-1" aria-labelledby="financeDashboardLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-bg-primary p-2 rounded" id="financeDashboardLabel">Dashboard
+                            Financeiro</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            <!-- Primeira linha com os gráficos -->
+                            <div class="row mb-4">
+                                <!-- Gráfico de Categorias -->
+                                <div class="col-md-6">
+                                    <div class="dashboard-card">
+                                        <div class="dashboard-card-header">
+                                            <h5 class="dashboard-card-title">Gastos por Categoria</h5>
+                                        </div>
+                                        <div class="dashboard-chart-container">
+                                            <canvas id="financeCategChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Gráfico Mensal -->
+                                <div class="col-md-6">
+                                    <div class="dashboard-card">
+                                        <div class="dashboard-card-header">
+                                            <h5 class="dashboard-card-title">Gastos Mensais</h5>
+                                            <div class="btn-group-responsive mb-3" role="group"
+                                                aria-label="Filtro de período">
+                                                <button type="button" class="btn btn-outline-primary"
+                                                    data-period="daily">Diário</button>
+                                                <button type="button" class="btn btn-outline-primary"
+                                                    data-period="weekly">Semanal</button>
+                                                <button type="button" class="btn btn-outline-primary"
+                                                    data-period="biweekly">Quinzenal</button>
+                                                <button type="button" class="btn btn-outline-primary active"
+                                                    data-period="monthly">Mensal</button>
+                                            </div>
+                                        </div>
+                                        <div class="dashboard-chart-container">
+                                            <canvas id="financeMonthChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Segunda linha com os cards de informação -->
+                            <div class="row">
+                                <!-- Card Meta -->
+                                <div class="col-md-4">
+                                    <div class="dashboard-card dashboard-text-center">
+                                        <div class="dashboard-header-primary">
+                                            <h5 class="dashboard-card-title">Total de gastos</h5>
+                                        </div>
+                                        <div class="dashboard-card-body">
+                                            <h3 id="financeDashMeta" class="dashboard-card-text"></h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Card Saldo disponível -->
+                                <div class="col-md-4">
+                                    <div class="dashboard-card dashboard-text-center">
+                                        <div class="dashboard-header-success">
+                                            <h5 class="dashboard-card-title">Saldo disponível</h5>
+                                        </div>
+                                        <div class="dashboard-card-body">
+                                            <h3 id="financeDashResources" class="dashboard-card-text"></h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Card Última Atualização -->
+                                <div class="col-md-4">
+                                    <div class="dashboard-card dashboard-text-center">
+                                        <div class="dashboard-header-info">
+                                            <h5 class="dashboard-card-title">Última Atualização</h5>
+                                        </div>
+                                        <div class="dashboard-card-body">
+                                            <h3 id="financeDashLastUpdate" class="dashboard-card-text"></h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!--********************************************************************-->
+
+        <!-- Gráfico de Gastos Mensais -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title text-bg-primary p-2 rounded">Gráfico de Gastos Mensais</h5>
+                <canvas id="gastosChart"></canvas>
+            </div>
+        </div>
+
+        <!--Modal de edição da Lista de gastos-->
+        <div class="modal fade" id="spendingModal" tabindex="-1" aria-labelledby="spendingModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-bg-primary p-2 rounded" id="spendingModalLabel">Lista de Gastos</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="search-input" placeholder="Filtrar compras">
+                            <!--<span class="input-group-text"><i class="bi bi-search"></i></span>-->
+                        </div>
+                        <ul class="list-group list-container" id="content-list">
+                            <!-- Itens da lista de gastos serão inseridos aqui dinamicamente -->
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <!--<button type="button" class="btn btn-primary" id="saveButton">Salvar</button>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Caixa de ferramentas -->
+        <div class="card mt-4 mb-2">
+            <div class="card-body">
+                <h5 class="card-title text-bg-primary p-2 rounded">Ferramentas</h5>
+                <!--Nova abordagem de menu hamburguer-->
+                <nav class="menu">
+                    <input type="checkbox" class="menu-open" name="menu-open" id="menu-open" />
+
+                    <label class="menu-open-button" for="menu-open">
+                        <i class="bi bi-tools closed-icon"></i>
+                        <i class="fa-solid fa-box-open opened-icon"></i>
+                    </label>
+
+                    <a href="#" class="menu-item" id="analiseModalFiltros" data-bs-toggle="modal"
+                        data-bs-target="#modalFilter"><i class="fa-solid fa-hand-holding-dollar"
+                            title="Analisar gastos"></i></a>
+                    <a href="#" class="menu-item" id="dash" data-bs-toggle="modal"
+                        data-bs-target="#financeDashboardModal"><i class="bi bi-graph-up-arrow"
+                            title="Dashboards"></i></a>
+                    <a href="https://chatgpt.com/" class="menu-item" target="_blank"><i class="fa-solid fa-brain"
+                            id="consultorIa" title="Consultor financeiro IA"></i></a>
+                    <a href="#" class="menu-item"><i class="fa-solid fa-pen-to-square" id="openModalBtnEdit"
+                            data-bs-toggle="modal" data-bs-target="#spendingModal" title="Edição dos dados"></i></a>
+                    <a href="#" class="menu-item"><i class="bi bi-file-earmark-pdf" id="gerarRelatorio"
+                            title="Gerar relatório"></i></a>
+                </nav>
+
+                <!-- Filters (SVG para efeito "goo") -->
+                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="display: none;">
+                    <defs>
+                        <filter id="shadowed-goo">
+                            <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="10" />
+                            <feColorMatrix in="blur" mode="matrix" values="
+                                1 0 0 0 0
+                                0 1 0 0 0
+                                0 0 1 0 0
+                                0 0 0 18 -7
+                            " result="goo" />
+                            <feGaussianBlur in="goo" stdDeviation="3" result="shadow" />
+                            <feColorMatrix in="shadow" mode="matrix" values="
+                                0 0 0 0 0
+                                0 0 0 0 0
+                                0 0 0 0 0
+                                0 0 0 1 -0.2
+                            " result="shadow" />
+                            <feOffset in="shadow" dx="1" dy="1" result="shadow" />
+                            <feComposite in2="shadow" in="goo" result="goo" />
+                            <feComposite in2="goo" in="SourceGraphic" result="mix" />
+                        </filter>
+                        <filter id="goo">
+                            <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="10" />
+                            <feColorMatrix in="blur" mode="matrix" values="
+                                1 0 0 0 0
+                                0 1 0 0 0
+                                0 0 1 0 0
+                                0 0 0 18 -7
+                            " result="goo" />
+                            <feComposite in2="goo" in="SourceGraphic" result="mix" />
+                        </filter>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script src="./js/indexVictorRelat.js"></script>
+    <script src="./js/editModal11.js"></script>
+    <script src="./js/analiseGastos8Victor.js"></script>
+    <script src="./js/conselhoDeIa2Victor.js"></script>
+    <script src="./js/dashboard6.js"></script>
+
+</body>
+
+</html>

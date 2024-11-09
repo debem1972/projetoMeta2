@@ -1,0 +1,673 @@
+@font-face {
+    font-family: "ieroglifo";
+    src: url(../../fonts/the_orb_report/The-Orb-Report.ttf) format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    background-color: #f8f9fa;
+}
+
+.container {
+    max-width: 800px;
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: #007bff;
+    color: white;
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/*Div pai do label e do icone de help*/
+.labelDoInput {
+    display: flex;
+    /*position:relative;*/
+    transition: all 0.3s;
+}
+
+.labelDoInput i {
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.labelDoInput i:hover {
+    transform: scale(1.1);
+    color: green;
+}
+
+/*Div pai que abriga os input's meta e receita*/
+.divDoInput {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.divDoInput input {
+    padding-right: 30px;
+}
+
+
+.divDoInput i {
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+    color: #999;
+}
+
+.resumo i {
+    cursor: pointer;
+    color: #999;
+}
+
+
+/*Cards de ajuda*/
+.ajudaEscrita {
+    /*display:none;*/
+    position: absolute;
+    border: none;
+    width: 90%;
+    top: 140px;
+    /*left:19px;*/
+    box-shadow: 3px 3px 8px grey;
+}
+
+
+.okButton {
+    width: 60px;
+    float: right;
+    margin-bottom: 5px;
+    transition: 0.1s ease-in;
+}
+
+.okButton:active {
+    transform: scale(0.8);
+    box-shadow: inset 2px 2px 3px black;
+}
+
+
+/*Card da ajuda do campo meta*/
+#ajudaEscritaMeta,
+#ajudaEscritaReceita,
+#ajudaEscritaGastoDoDia {
+    display: none;
+    z-index: 1000;
+}
+
+
+
+/*----------------------------------------*/
+/*Classe que substitui os strings dos id's #saldoRestante e #gastoDiario pela fonte ieroglifo*/
+.hidden-text {
+    font-family: "ieroglifo";
+    letter-spacing: 0;
+    color: black;
+    font-size: 0.5em;
+}
+
+/*--------------------------------------------------------------------*/
+#gerarRelatorio {
+    font-size: 25px;
+    color: #ffff;
+    padding: 30px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+#gerarRelatorio:hover {
+    color: #007bff;
+}
+
+
+
+
+
+/*Estilização do menu hamburguer*/
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Filtros SVG aplicados ao menu */
+.menu {
+    filter: url('#shadowed-goo');
+    position: relative;
+    padding-top: 20px;
+    padding-left: 80px;
+    width: 650px;
+    height: 150px;
+    box-sizing: border-box;
+    font-size: 20px;
+    text-align: left;
+}
+
+/* Checkbox oculto */
+.menu-open {
+    display: none;
+}
+
+/* Estilos do botão de abrir menu */
+.menu-open-button {
+    background: #007bff;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    margin-left: -40px;
+    /*position: absolute;*/
+    position: absolute;
+    top: 20px;
+    color: white;
+    text-align: center;
+    line-height: 80px;
+    transform: scale(1.1, 1.1) translate3d(0, 0, 0);
+    transition: transform 400ms cubic-bezier(0.175, 0.885, 0.320, 1.275);
+    cursor: pointer;
+    z-index: 2;
+    /*Acrecentado*/
+    /*display: flex;
+    justify-content: center;
+    align-items: center;*/
+}
+
+/* Efeito hover no botão de abrir menu */
+.menu-open-button:hover {
+    transform: scale(1.2, 1.2) translate3d(0, 0, 0);
+}
+
+
+.menu-open-button i {
+    position: absolute;
+    /*Centraliza os ícones*/
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.closed-icon {
+    /* Ícone visível quando o menu está fechado */
+    opacity: 1;
+}
+
+.opened-icon {
+    /* Ícone escondido quando o menu está fechado */
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0deg);
+}
+
+/* Quando o menu está aberto */
+.menu-open:checked+.menu-open-button .closed-icon {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0deg);
+}
+
+.menu-open:checked+.menu-open-button .opened-icon {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(0deg);
+}
+
+
+/* Estilos do botão de abrir menu quando o menu está aberto */
+.menu-open:checked+.menu-open-button {
+    transition-timing-function: linear;
+    transition-duration: 200ms;
+    transform: scale(0.8, 0.8) translate3d(0, 0, 0);
+}
+
+/* Estilos dos itens do menu: cor original gerada:#00bcd4 */
+.menu-item {
+    background: #007bff;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    margin-left: -40px;
+    position: absolute;
+    top: 20px;
+    color: #ffff;
+    text-align: center;
+    line-height: 80px;
+    transform: translate3d(0, 0, 0);
+    transition: transform ease-out 200ms;
+    cursor: pointer;
+    /* Adicionar transições para cada item */
+    transition-duration: 180ms;
+    /* Para nth-child(3) */
+}
+
+/*Amplia a área clicável dos ícones da caixa de ferramentas para o botão*/
+/*.menu-item i {
+    pointer-events: none;
+}*/
+
+.menu-item:hover {
+    background: white;
+    color: #007bff;
+    /*Cor azul original #00bcd4*/
+    transform: scale(1.1);
+    transition-duration: 180ms;
+}
+
+/* Especificar transições para cada item usando nth-child */
+.menu-open:checked~.menu-item:nth-child(3) {
+    transition-duration: 190ms;
+    /* 90ms + 100ms * 1 */
+    transform: translate3d(110px, 0, 0);
+    /* $open-distance: 105px */
+
+    /* Cor sutilmente alterada */
+
+}
+
+.menu-open:checked~.menu-item:nth-child(4) {
+    transition-duration: 290ms;
+    /* 90ms + 100ms * 2 */
+    transform: translate3d(220px, 0, 0);
+    /* 105px * 2 */
+
+}
+
+.menu-open:checked~.menu-item:nth-child(5) {
+    transition-duration: 390ms;
+    /* 90ms + 100ms * 3 */
+    transform: translate3d(330px, 0, 0);
+    /* 105px * 3 */
+
+}
+
+.menu-open:checked~.menu-item:nth-child(6) {
+    transition-duration: 490ms;
+    /* 90ms + 100ms * 4 */
+    transform: translate3d(440px, 0, 0);
+    /* 105px * 4 */
+
+}
+
+/* Novo botão: nth-child(7) */
+.menu-open:checked~.menu-item:nth-child(7) {
+    transition-duration: 590ms;
+    /* 90ms + 100ms * 5 */
+    transform: translate3d(550px, 0, 0);
+    /* 105px * 5 */
+}
+
+/*-----------------------------------------------------------------*/
+#consultorIa,
+#openModalBtnEdit{
+    padding:10px
+}
+/*--------------------------------------------------------------------*/
+/* Break points para o menu hamburguer: Conforme o conceito desktop first, configurar break point's do maior para o menor device */
+
+/*Define estilo para devices com largura mínima de 768px(tablets em modo paisagem) e largura máxima de 991,98px(tablets em modo retrato e laptop's pequenos)*/
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .menu {
+        padding-left: 30px;
+        width: 100%;
+        height: 140px;
+    }
+
+    .menu-open-button,
+    .menu-item {
+        width: 55px;
+        height: 55px;
+        line-height: 55px;
+        font-size: 15px;
+    }
+
+    .menu-open-button {
+        top: 15px;
+        margin-left: -35px;
+    }
+
+    .menu-item {
+        top: 15px;
+        margin-left: -35px;
+    }
+
+    #gerarRelatorio {
+        padding: 10px;
+    }
+
+    /*Espaçamento entre os botões quando o menu está aberto*/
+    .menu-open:checked~.menu-item:nth-child(3) {
+        transform: translate3d(70px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(4) {
+        transform: translate3d(140px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(5) {
+        transform: translate3d(210px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(6) {
+        transform: translate3d(280px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(7) {
+        transform: translate3d(350px, 0, 0);
+    }
+}
+
+/*---------------------------------------------------------------------*/
+/*Define estilo para devices com largura máxima de 767.98px.(smartphones)*/
+@media (max-width: 767.98px) {
+    .menu {
+        padding-left: 15px;
+        width: 100%;
+        height: 100px;
+    }
+
+    .menu-open-button,
+    .menu-item {
+        width: 45px;
+        height: 45px;
+        line-height: 45px;
+        font-size: 13px;
+    }
+
+    .menu-open-button {
+        top: 10px;
+        margin-left: -25px;
+    }
+
+    .menu-item {
+        top: 10px;
+        margin-left: -25px;
+    }
+
+    .menu-open-button i,
+    .menu-item i {
+        font-size: 1em;
+    }
+
+    #gerarRelatorio {
+        padding: 10px;
+    }
+
+
+    /*Espaçamento entre os botões quando o menu está aberto*/
+    .menu-open:checked~.menu-item:nth-child(3) {
+        transform: translate3d(50px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(4) {
+        transform: translate3d(100px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(5) {
+        transform: translate3d(150px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(6) {
+        transform: translate3d(200px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(7) {
+        transform: translate3d(250px, 0, 0);
+    }
+}
+
+
+
+/*------------------------------------------------------------------------*/
+/*Define estilo para devices que tenham a tela no mínimo de 321px de largura(dispositivos muito pequenos), até devices com a largura de tela  com no máximo 767,98px(smartphone no modo paisagem...a maioria)*/
+@media (min-width: 321px) and (max-width: 767.98px) {
+    .menu {
+        padding-left: 8px;
+        width: 100%;
+        height: 90px;
+    }
+
+    .menu-open-button,
+    .menu-item {
+        width: 42px;
+        height: 42px;
+        line-height: 42px;
+        font-size: 13px;
+    }
+
+    .menu-open-button {
+        top: 10px;
+        margin-left: -22.5px;
+    }
+
+    .menu-item {
+        top: 10px;
+        margin-left: -22.5px;
+    }
+
+    .menu-open-button i,
+    .menu-item i {
+        font-size: 0.95em;
+    }
+
+    #gerarRelatorio {
+        padding: 10px;
+    }
+
+    /* Ajustando o espaçamento entre os itens do menu */
+    .menu-open:checked~.menu-item:nth-child(3) {
+        transform: translate3d(56px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(4) {
+        transform: translate3d(114px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(5) {
+        transform: translate3d(171px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(6) {
+        transform: translate3d(228px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(7) {
+        transform: translate3d(285px, 0, 0);
+    }
+}
+
+
+
+
+
+/*---------------------------------------------------------------*/
+/* Breakpoint para pequenos devices com largura de tela com no máximo 320px,como iPhone 5 */
+@media (max-width: 320px) {
+    .menu {
+        padding-left: 10px;
+        width: 100%;
+        height: 80px;
+    }
+
+    .menu-open-button,
+    .menu-item {
+        width: 35px;
+        height: 35px;
+        line-height: 35px;
+        font-size: 11px;
+    }
+
+    .menu-open-button {
+        top: 10px;
+        margin-left: -21px;
+    }
+
+    .menu-item {
+        top: 10px;
+        margin-left: -21px;
+    }
+
+    .menu-open-button i,
+    .menu-item i {
+        font-size: 1em;
+    }
+
+    #gerarRelatorio {
+        font-size: 1em;
+        padding: 10px;
+    }
+
+    /* Ajustando o espaçamento entre os itens do menu */
+    .menu-open:checked~.menu-item:nth-child(3) {
+        transform: translate3d(50px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(4) {
+        transform: translate3d(100px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(5) {
+        transform: translate3d(150px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(6) {
+        transform: translate3d(200px, 0, 0);
+    }
+
+    .menu-open:checked~.menu-item:nth-child(7) {
+        transform: translate3d(250px, 0, 0);
+    }
+}
+
+
+
+/*------------------------------------------------*/
+/* CSS específico para o dashboard*/
+
+.dashboard-chart-container {
+    height: 300px;
+    position: relative;
+}
+
+.dashboard-card {
+    margin-bottom: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.dashboard-card-header {
+    padding: 0.75rem 1.25rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.dashboard-card-title {
+    margin-bottom: 0;
+    color: #212529;
+}
+
+.dashboard-card-body {
+    padding: 1.25rem;
+}
+
+.dashboard-text-center {
+    text-align: center;
+}
+
+.dashboard-header-primary {
+    background-color: #0d6efd;
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.dashboard-header-success {
+    background-color: #198754;
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.dashboard-header-info {
+    background-color: #0dcaf0;
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.dashboard-card-text {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+}
+
+/*Stilizando o btn group do dashboard*/
+.btn-group-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    width: 100%;
+}
+
+.btn-group-responsive .btn {
+    flex: 1;
+    white-space: nowrap;
+    min-width: 80px;
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .btn-group-responsive {
+        flex-direction: column;
+    }
+
+    .btn-group-responsive .btn {
+        width: 100%;
+        margin: 0;
+        border-radius: 4px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn-group-responsive .btn {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+}
+
+.dashboard-card {
+    padding: 15px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card-header {
+    margin-bottom: 15px;
+}
+
+.dashboard-card-title {
+    margin-bottom: 10px;
+}
+
+/*-----------------------------------------------------*/
+
+/*Ajustando o scroll automático para a lista de gastos no modo de edição*/
+.list-container {
+    max-height: 300px;
+    /* Defina a altura máxima desejada para a lista */
+    overflow-y: auto;
+    /* Ativar o scroll vertical quando a lista ultrapassar a altura máxima */
+}
+
+/*---------------------------------------------------------------------*/
