@@ -22,6 +22,9 @@ Relatório PDF:
 Efeitos sonoros:
 #Utilizados od efeitos sonoros gratuítos baixados do site www.zapsplat.com.
 
+Fonte externa:
+Foi utilizada uma fonte gratuíta do site www.dafont.com
+
 OBSERVAÇÃO IMPORTANTE: Persistência dos dados no localStorage, sendo que a cada novo mês(dia 1º), os dados são resetados, para poupar espaço. Portanto, emita relatório dos seus dados até o último dia do mês vigente.
 
 Espero que utilizem com sabedoria e que seja útil a alguém. 
