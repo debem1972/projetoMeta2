@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const totalGastos = gastosFiltrados.reduce((sum, gasto) => sum + gasto.valor, 0);
         const mediaGastos = totalGastos / diasDecorridos;
-        const diasRestantes = (new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate() - dataAtual.getDate()) + 1;
+        const diasRestantes = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate() - dataAtual.getDate();
         const previsaoFimMes = mediaGastos * diasRestantes;
         const saldoRestante = recursos - totalGastos;
         const mediaPermitida = recursos / new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate();

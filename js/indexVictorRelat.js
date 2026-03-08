@@ -49,12 +49,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const dataAtual = new Date();
         const ultimoDiaMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate();
-        const diasRestantes = ultimoDiaMes - dataAtual.getDate() + 1;
-        const gastoDiario = saldoRestante / diasRestantes;
+        const diasRestantes = ultimoDiaMes - dataAtual.getDate();
+        const gastoDiario = diasRestantes > 0 ? (saldoRestante / diasRestantes) : 0;
 
         saldoRestanteEl.textContent = `Saldo Restante: ${saldoRestante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
-        gastoDiarioEl.textContent = `Gasto Diário Permitido: ${gastoDiario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
-        diasRestantesEl.textContent = `Você tem ${diasRestantes} dias até o final do mês vigente!`;
+        gastoDiarioEl.textContent = `Saldo Diário Disponível: ${gastoDiario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+        diasRestantesEl.textContent = diasRestantes > 0
+            ? `Você tem ${diasRestantes} dias restantes até o final do mês vigente (sem contar hoje).`
+            : 'Hoje é o último dia do mês.';
 
         // Salvar saldoRestante e totalGastos no localStorage
         localStorage.setItem('saldoRestante', saldoRestante);
@@ -491,7 +493,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Atualizar o resumo e gráfico na inicialização
     atualizarResumo();
 });
-
 
 
 
