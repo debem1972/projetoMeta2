@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
 
 
     // Seleção de elementos do formulário
@@ -12,32 +12,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const saldoRestanteEl = document.getElementById('saldoRestante');
     const gastoDiarioEl = document.getElementById('gastoDiario');
     const diasRestantesEl = document.getElementById('diasRestantes');
-    const btnAnaliseGastos = document.getElementById('gerarAnalise');
-    //const analiseGastosModal = new bootstrap.Modal(document.getElementById('analiseGastosModal'));
     const gerarRelatorioBtn = document.getElementById('gerarRelatorio');
+    const exportarJsonBtn = document.getElementById('exportarJsonBtn');
     const caixaRegister = document.getElementById('som4');
     const novoLimiteVoice = document.getElementById('som5');
     const erroCamposVazios = document.getElementById('somErro');
 
     let gastosChart;
-
-    // Carregar dados do localStorage
-    const dados = JSON.parse(localStorage.getItem('controlegastos')) || {};
+    let dados = (await window.AppDB.getCurrentData()) || { gastos: [] };
+    dados.gastos = Array.isArray(dados.gastos) ? dados.gastos : [];
     metaInput.value = dados.meta || '';
     recursosInput.value = dados.recursos || '';
 
-    // Verificar se é um novo mês
-    const hoje = new Date();
-    const ultimaData = dados.ultimaData ? new Date(dados.ultimaData) : null;
-    if (!ultimaData || ultimaData.getMonth() !== hoje.getMonth() || ultimaData.getFullYear() !== hoje.getFullYear()) {
-        alert('Um novo mês se inicia! Por favor, insira seus dados para análise de custos.');
-        localStorage.removeItem('controlegastos');
-        // Resetar dados após novo mês
-        dados.meta = parseFloat(metaInput.value) || 0;
-        dados.recursos = parseFloat(recursosInput.value) || 0;
-        dados.ultimaData = hoje.toISOString();
-        dados.gastos = [];
-        localStorage.setItem('controlegastos', JSON.stringify(dados));
+    const appInit = await window.AppDB.ready();
+    if (appInit.shouldPromptExport && appInit.pendingExportMonthKey && appInit.pendingExportData) {
+        const confirmExport = confirm(
+            `Novo mês detectado. Deseja exportar agora os dados de ${appInit.pendingExportMonthKey} em JSON?`
+        );
+        if (confirmExport) {
+            const exported = await window.AppDB.exportMonthData(appInit.pendingExportMonthKey);
+            if (exported) {
+                await window.AppDB.clearPendingExport();
+                alert('Exportação concluída com sucesso.');
+            }
+        } else {
+            alert('Você pode exportar depois pelo botão "Exportar Dados JSON".');
+        }
     }
 
     // Função para atualizar o resumo
@@ -57,10 +57,6 @@ document.addEventListener('DOMContentLoaded', function () {
         diasRestantesEl.textContent = diasRestantes > 0
             ? `Você tem ${diasRestantes} dias restantes até o final do mês vigente (sem contar hoje).`
             : 'Hoje é o último dia do mês.';
-
-        // Salvar saldoRestante e totalGastos no localStorage
-        localStorage.setItem('saldoRestante', saldoRestante);
-        localStorage.setItem('totalGastos', totalGastos);
 
         atualizarGrafico();
     }
@@ -157,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     //--------------------------------------------------------------------
     // Função de validação e submissão do formulário
-    function validarESubmeter(e) {
+    async function validarESubmeter(e) {
         e.preventDefault();  // Previne o comportamento padrão do formulário
 
         // Validação dos campos
@@ -187,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dados.gastos = dados.gastos || [];
         dados.gastos.push({ data, valor: gasto, categoria: tipoGasto });  // Salva a categoria junto com os outros dados
 
-        localStorage.setItem('controlegastos', JSON.stringify(dados));
+        await window.AppDB.saveCurrentData(dados);
 
         // Toca o som de caixa registradora ao clicar no botão Adicionar Gasto
         caixaRegister.play();
@@ -389,6 +385,31 @@ document.addEventListener('DOMContentLoaded', function () {
     // Adicionando evento de clique para gerar relatório
     gerarRelatorioBtn.addEventListener('click', gerarRelatorioPDF);
 
+    exportarJsonBtn.addEventListener('click', async function () {
+        const pendingInfo = await window.AppDB.getPendingExportInfo();
+        if (pendingInfo && pendingInfo.pendingExportMonthKey) {
+            const exportPending = confirm(
+                `Existe exportação pendente do mês ${pendingInfo.pendingExportMonthKey}. Deseja exportar esse mês agora?`
+            );
+            if (exportPending) {
+                const ok = await window.AppDB.exportMonthData(pendingInfo.pendingExportMonthKey);
+                if (ok) {
+                    await window.AppDB.clearPendingExport();
+                    alert('Dados do mês anterior exportados com sucesso.');
+                }
+                return;
+            }
+        }
+
+        if (!dados || !dados.monthKey) {
+            dados = await window.AppDB.getCurrentData();
+        }
+        const exported = await window.AppDB.exportMonthData(dados.monthKey);
+        if (exported) {
+            alert('Dados do mês atual exportados com sucesso.');
+        }
+    });
+
     // -------------------------- FUNÇÕES DE TOGGLING --------------------------
 
     // 1. Toggling para Inputs (#meta e #recursos)
@@ -493,9 +514,5 @@ document.addEventListener('DOMContentLoaded', function () {
     // Atualizar o resumo e gráfico na inicialização
     atualizarResumo();
 });
-
-
-
-
 
 

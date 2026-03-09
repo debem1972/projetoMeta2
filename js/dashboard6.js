@@ -1,4 +1,5 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
+    await window.AppDB.ready();
     // Função para agrupar dados por período
     function groupDataByPeriod(gastos, period) {
         return gastos.reduce((acc, item) => {
@@ -30,9 +31,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }, {});
     }
 
-    document.getElementById('financeDashboardModal').addEventListener('show.bs.modal', function () {
-        const storedData = JSON.parse(localStorage.getItem('controlegastos'));
-        const { gastos, meta, ultimaData } = storedData;
+    document.getElementById('financeDashboardModal').addEventListener('show.bs.modal', async function () {
+        const storedData = await window.AppDB.getCurrentData();
+        const gastos = storedData?.gastos || [];
+        const { meta, recursos, ultimaData } = storedData;
 
         // Limpar gráficos existentes
         const categChart = Chart.getChart("financeCategChart");
@@ -132,23 +134,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Render Overview Cards
-        document.getElementById('financeDashMeta').textContent =
-            new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-                .format(meta);
+        const totalGastos = gastos.reduce((sum, item) => sum + item.valor, 0);
+        const saldoRestante = (Number(recursos) || 0) - totalGastos;
 
-        // Exibir o total de gastos no card de Meta Mensal
-        const totalGastos = JSON.parse(localStorage.getItem('totalGastos'));
         document.getElementById('financeDashMeta').textContent =
             new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
                 .format(totalGastos);
 
-        // Exibir o saldo restante no card de Recursos Disponíveis
-        const saldoRestante = JSON.parse(localStorage.getItem('saldoRestante'));
         document.getElementById('financeDashResources').textContent =
             new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
                 .format(saldoRestante);
 
         document.getElementById('financeDashLastUpdate').textContent =
-            new Date(ultimaData).toLocaleString();
+            ultimaData ? new Date(ultimaData).toLocaleString() : '-';
     });
 });

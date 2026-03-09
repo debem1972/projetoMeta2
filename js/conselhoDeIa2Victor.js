@@ -1,10 +1,11 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
+    await window.AppDB.ready();
     const consultorIa = document.getElementById('consultorIa');
 
-    function gerarConsultaFinanceira(event) {
+    async function gerarConsultaFinanceira(event) {
         event.preventDefault();  // Evita que o link abra imediatamente
 
-        const dados = JSON.parse(localStorage.getItem('controlegastos')) || {};
+        const dados = (await window.AppDB.getCurrentData()) || {};
 
         if (!dados.gastos || dados.gastos.length === 0) {
             alert('Você precisa registrar seus gastos para que a IA possa fornecer uma análise financeira.');
