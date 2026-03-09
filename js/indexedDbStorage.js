@@ -226,6 +226,41 @@
         return normalized;
     }
 
+    function normalizeGastoEntry(item) {
+        if (!item || typeof item !== 'object') return null;
+        const data = typeof item.data === 'string' ? item.data : null;
+        const valor = Number(item.valor);
+        const categoria = typeof item.categoria === 'string' && item.categoria.trim() ? item.categoria.trim() : 'outros';
+        if (!data || Number.isNaN(valor)) return null;
+        return { data, valor, categoria };
+    }
+
+    function normalizeImportedPayload(rawPayload) {
+        const payload = rawPayload && typeof rawPayload === 'object' ? rawPayload : {};
+        const inferredDate = payload.ultimaData ? new Date(payload.ultimaData) : new Date();
+        const monthKey = typeof payload.monthKey === 'string' && /^\d{4}-\d{2}$/.test(payload.monthKey)
+            ? payload.monthKey
+            : monthKeyFromDate(inferredDate);
+
+        const gastos = Array.isArray(payload.gastos)
+            ? payload.gastos.map(normalizeGastoEntry).filter(Boolean)
+            : [];
+
+        return {
+            monthKey,
+            meta: Number(payload.meta) || 0,
+            recursos: Number(payload.recursos) || 0,
+            ultimaData: payload.ultimaData || new Date().toISOString(),
+            gastos
+        };
+    }
+
+    async function importMonthData(rawPayload) {
+        const normalized = normalizeImportedPayload(rawPayload);
+        await saveMonthData(normalized);
+        return normalized;
+    }
+
     async function exportMonthData(monthKey) {
         const data = await getMonthData(monthKey);
         if (!data) return false;
@@ -252,10 +287,17 @@
         await setState('pendingExportMonthKey', null);
     }
 
+    async function getCurrentMonthKey() {
+        const { currentMonthKey } = await init();
+        return currentMonthKey;
+    }
+
     window.AppDB = {
         ready: init,
         getCurrentData,
+        getCurrentMonthKey,
         saveCurrentData,
+        importMonthData,
         exportMonthData,
         getPendingExportInfo,
         clearPendingExport

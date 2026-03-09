@@ -330,9 +330,15 @@
         <div class="card mt-4 mb-2">
             <div class="card-body">
                 <h5 class="card-title text-bg-primary p-2 rounded">Ferramentas</h5>
-                <button type="button" class="btn btn-outline-primary mb-3" id="exportarJsonBtn">
-                    Exportar Dados JSON
-                </button>
+                <div class="json-actions mb-3">
+                    <button type="button" class="btn btn-outline-primary" id="exportarJsonBtn">
+                        Exportar Dados JSON
+                    </button>
+                    <button type="button" class="btn btn-outline-success" id="importarJsonBtn">
+                        Importar Dados JSON
+                    </button>
+                    <input type="file" id="importarJsonInput" accept=".json,application/json" hidden>
+                </div>
                 <!--Nova abordagem de menu hamburguer-->
                 <nav class="menu">
                     <input type="checkbox" class="menu-open" name="menu-open" id="menu-open" />

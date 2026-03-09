@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     const diasRestantesEl = document.getElementById('diasRestantes');
     const gerarRelatorioBtn = document.getElementById('gerarRelatorio');
     const exportarJsonBtn = document.getElementById('exportarJsonBtn');
+    const importarJsonBtn = document.getElementById('importarJsonBtn');
+    const importarJsonInput = document.getElementById('importarJsonInput');
     const caixaRegister = document.getElementById('som4');
     const novoLimiteVoice = document.getElementById('som5');
     const erroCamposVazios = document.getElementById('somErro');
@@ -410,6 +412,36 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     });
 
+    importarJsonBtn.addEventListener('click', function () {
+        importarJsonInput.click();
+    });
+
+    importarJsonInput.addEventListener('change', async function (event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        try {
+            const textContent = await file.text();
+            const parsedJson = JSON.parse(textContent);
+            const importedData = await window.AppDB.importMonthData(parsedJson);
+            const currentMonthKey = await window.AppDB.getCurrentMonthKey();
+
+            if (importedData.monthKey === currentMonthKey) {
+                dados = await window.AppDB.getCurrentData();
+                metaInput.value = dados.meta || '';
+                recursosInput.value = dados.recursos || '';
+                atualizarResumo();
+            }
+
+            alert(`Importação concluída para o mês ${importedData.monthKey}.`);
+        } catch (error) {
+            console.error('Erro ao importar JSON:', error);
+            alert('Não foi possível importar o arquivo. Verifique se o JSON é válido.');
+        } finally {
+            importarJsonInput.value = '';
+        }
+    });
+
     // -------------------------- FUNÇÕES DE TOGGLING --------------------------
 
     // 1. Toggling para Inputs (#meta e #recursos)
@@ -514,5 +546,4 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Atualizar o resumo e gráfico na inicialização
     atualizarResumo();
 });
-
 

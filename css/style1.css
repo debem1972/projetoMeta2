@@ -133,6 +133,23 @@ body {
     color: #007bff;
 }
 
+/*---------------------------------------------------------------*/
+/* Ações de JSON (Exportar / Importar) */
+.json-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.json-actions .btn {
+    flex: 1;
+}
+
+@media (max-width: 767.98px) {
+    .json-actions .btn {
+        min-width: 0;
+    }
+}
+
 
 
 
