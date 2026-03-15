@@ -104,6 +104,24 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
+    const RESUMO_VISIBILITY_STORAGE_KEY = 'financeVisibility';
+    const RESUMO_MASK_TOKEN = '******';
+
+    function isResumoHidden() {
+        return localStorage.getItem(RESUMO_VISIBILITY_STORAGE_KEY) === 'hidden';
+    }
+
+    function maskResumoLine(text) {
+        if (!text) return '';
+        return String(text).replace(/R\$\s*[\d\.,]+/g, `R$ ${RESUMO_MASK_TOKEN}`);
+    }
+
+    function setResumoLineText(element, realText, hidden) {
+        if (!element) return;
+        element.dataset.realText = realText;
+        element.textContent = hidden ? maskResumoLine(realText) : realText;
+    }
+
     // Função para atualizar o resumo
     function atualizarResumo() {
         const recursos = obterValorNumerico(recursosInput);
@@ -116,8 +134,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         const diasRestantes = ultimoDiaMes - dataAtual.getDate();
         const gastoDiario = diasRestantes > 0 ? (saldoRestante / diasRestantes) : 0;
 
-        saldoRestanteEl.textContent = `Saldo Restante: ${saldoRestante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
-        gastoDiarioEl.textContent = `Saldo Diário Disponível: ${gastoDiario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+        const saldoText = `Saldo Restante: ${saldoRestante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+        const gastoText = `Saldo Diário Disponível: ${gastoDiario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+        const hidden = isResumoHidden();
+
+        setResumoLineText(saldoRestanteEl, saldoText, hidden);
+        setResumoLineText(gastoDiarioEl, gastoText, hidden);
         diasRestantesEl.textContent = diasRestantes > 0
             ? `Você tem ${diasRestantes} dias restantes até o final do mês vigente (sem contar hoje).`
             : 'Hoje é o último dia do mês.';
@@ -565,54 +587,32 @@ document.addEventListener('DOMContentLoaded', async function () {
     restoreVisibility('meta', 'toggleMeta', 'metaVisibility');
     restoreVisibility('recursos', 'toggleReceita', 'receitaVisibility');
 
-    // 2. Toggling para Spans (<p id="saldoRestante"> e <p id="gastoDiario">)
-    // Função para alternar visibilidade dos spans
-    function toggleVisibilitySpans(iconId, saldoId, gastoId, storageKey) {
-        const icon = document.getElementById(iconId);
-        const saldoSpan = document.getElementById(saldoId);
-        const gastoSpan = document.getElementById(gastoId);
+    // 2. Toggling para Resumo (<p id="saldoRestante"> e <p id="gastoDiario">)
+    function setResumoVisibility(hidden) {
+        const icon = document.getElementById('ocultaMostraQsj');
+        if (!icon) return;
 
-        // Verifica se os valores estão ocultos (se têm a classe 'hidden-text')
-        if (saldoSpan.classList.contains('hidden-text') || gastoSpan.classList.contains('hidden-text')) {
-            // Remove a classe de ocultação e troca o ícone para 'bi-eye'
-            saldoSpan.classList.remove('hidden-text');
-            gastoSpan.classList.remove('hidden-text');
-            icon.classList.replace('bi-eye-slash', 'bi-eye');
-            localStorage.setItem(storageKey, "visible");
-        } else {
-            // Adiciona a classe de ocultação e troca o ícone para 'bi-eye-slash'
-            saldoSpan.classList.add('hidden-text');
-            gastoSpan.classList.add('hidden-text');
+        if (hidden) {
             icon.classList.replace('bi-eye', 'bi-eye-slash');
-            localStorage.setItem(storageKey, "hidden");
-        }
-    }
-
-    // Função para restaurar visibilidade dos spans com base no localStorage
-    function restoreVisibilitySpans(iconId, saldoId, gastoId, storageKey) {
-        const icon = document.getElementById(iconId);
-        const saldoSpan = document.getElementById(saldoId);
-        const gastoSpan = document.getElementById(gastoId);
-        const visibilityState = localStorage.getItem(storageKey);
-
-        if (visibilityState === "hidden") {
-            saldoSpan.classList.add('hidden-text');
-            gastoSpan.classList.add('hidden-text');
-            icon.classList.replace('bi-eye', 'bi-eye-slash');
+            localStorage.setItem(RESUMO_VISIBILITY_STORAGE_KEY, 'hidden');
         } else {
-            saldoSpan.classList.remove('hidden-text');
-            gastoSpan.classList.remove('hidden-text');
             icon.classList.replace('bi-eye-slash', 'bi-eye');
+            localStorage.setItem(RESUMO_VISIBILITY_STORAGE_KEY, 'visible');
         }
+
+        const saldoReal = saldoRestanteEl.dataset.realText || saldoRestanteEl.textContent || '';
+        const gastoReal = gastoDiarioEl.dataset.realText || gastoDiarioEl.textContent || '';
+        setResumoLineText(saldoRestanteEl, saldoReal, hidden);
+        setResumoLineText(gastoDiarioEl, gastoReal, hidden);
     }
 
     // Adiciona evento de clique para o ícone de resumo
     document.getElementById('ocultaMostraQsj').addEventListener('click', function () {
-        toggleVisibilitySpans('ocultaMostraQsj', 'saldoRestante', 'gastoDiario', 'financeVisibility');
+        setResumoVisibility(!isResumoHidden());
     });
 
-    // Restaura visibilidade ao carregar a página para os spans
-    restoreVisibilitySpans('ocultaMostraQsj', 'saldoRestante', 'gastoDiario', 'financeVisibility');
+    // Restaura visibilidade ao carregar a página para o resumo
+    setResumoVisibility(isResumoHidden());
 
     // -------------------------- FIM DAS FUNÇÕES DE TOGGLING --------------------------
 
@@ -622,4 +622,3 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Atualizar o resumo e gráfico na inicialização
     atualizarResumo();
 });
-

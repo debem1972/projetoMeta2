@@ -1,14 +1,68 @@
 document.addEventListener('DOMContentLoaded', async function () {
     await window.AppDB.ready();
+
+    const RESUMO_VISIBILITY_STORAGE_KEY = 'financeVisibility';
+    const DASH_MASK_TOKEN = '******';
+
+    function isValuesHidden() {
+        return localStorage.getItem(RESUMO_VISIBILITY_STORAGE_KEY) === 'hidden';
+    }
+
+    function formatCurrencyBRL(value) {
+        if (isValuesHidden()) return `R$ ${DASH_MASK_TOKEN}`;
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    }
+
+    function parseLocalDate(dateValue) {
+        if (!dateValue) return null;
+        if (dateValue instanceof Date) {
+            const d = new Date(dateValue);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        const raw = String(dateValue).trim();
+        const isoDateOnly = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (isoDateOnly) {
+            const year = Number(isoDateOnly[1]);
+            const month = Number(isoDateOnly[2]) - 1;
+            const day = Number(isoDateOnly[3]);
+            const d = new Date(year, month, day);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        const brDate = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (brDate) {
+            const day = Number(brDate[1]);
+            const month = Number(brDate[2]) - 1;
+            const year = Number(brDate[3]);
+            const d = new Date(year, month, day);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return null;
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    function toLocalISODateString(date) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
     // Função para agrupar dados por período
     function groupDataByPeriod(gastos, period) {
         return gastos.reduce((acc, item) => {
             let key;
-            const date = new Date(item.data);
+            const date = parseLocalDate(item.data);
+            if (!date) return acc;
 
             switch (period) {
                 case 'daily':
-                    key = date.toISOString().split('T')[0];
+                    key = toLocalISODateString(date);
                     break;
                 case 'weekly':
                     const startOfYear = new Date(date.getFullYear(), 0, 1);
@@ -61,6 +115,18 @@ document.addEventListener('DOMContentLoaded', async function () {
                     backgroundColor: categoryChartData.map(() =>
                         `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`)
                 }]
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const label = context.label || '';
+                                return `${label}: ${formatCurrencyBRL(context.raw)}`;
+                            }
+                        }
+                    }
+                }
             }
         });
 
@@ -88,10 +154,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             beginAtZero: true,
                             ticks: {
                                 callback: function (value) {
-                                    return new Intl.NumberFormat('pt-BR', {
-                                        style: 'currency',
-                                        currency: 'BRL'
-                                    }).format(value);
+                                    return formatCurrencyBRL(value);
                                 }
                             }
                         }
@@ -100,10 +163,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         tooltip: {
                             callbacks: {
                                 label: function (context) {
-                                    return new Intl.NumberFormat('pt-BR', {
-                                        style: 'currency',
-                                        currency: 'BRL'
-                                    }).format(context.raw);
+                                    return formatCurrencyBRL(context.raw);
                                 }
                             }
                         }
@@ -138,12 +198,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         const saldoRestante = (Number(recursos) || 0) - totalGastos;
 
         document.getElementById('financeDashMeta').textContent =
-            new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-                .format(totalGastos);
+            formatCurrencyBRL(totalGastos);
 
         document.getElementById('financeDashResources').textContent =
-            new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-                .format(saldoRestante);
+            formatCurrencyBRL(saldoRestante);
 
         document.getElementById('financeDashLastUpdate').textContent =
             ultimaData ? new Date(ultimaData).toLocaleString() : '-';
