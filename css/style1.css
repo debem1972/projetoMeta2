@@ -60,6 +60,16 @@ body {
 
 .divDoInput input {
     padding-right: 30px;
+    font-weight: 500;
+}
+
+/* Estilo para inputs de moeda */
+input[type="text"]#meta,
+input[type="text"]#recursos,
+input[type="text"]#gasto {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
 }
 
 

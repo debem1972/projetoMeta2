@@ -23,8 +23,70 @@ document.addEventListener('DOMContentLoaded', async function () {
     let gastosChart;
     let dados = (await window.AppDB.getCurrentData()) || { gastos: [] };
     dados.gastos = Array.isArray(dados.gastos) ? dados.gastos : [];
-    metaInput.value = dados.meta || '';
-    recursosInput.value = dados.recursos || '';
+
+    // -------------------------- MÁSCARA DE MOEDA BRL --------------------------
+    
+    // Função para formatar valor em BRL
+    function formatarMoedaBRL(valor) {
+        if (!valor) return '';
+        const numero = parseFloat(valor);
+        if (isNaN(numero)) return '';
+        return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // Função para extrair apenas números do input
+    function extrairNumeros(valor) {
+        return valor.replace(/\D/g, '');
+    }
+
+    // Função para converter centavos em reais
+    function centavosParaReais(centavos) {
+        return (parseInt(centavos) / 100).toFixed(2);
+    }
+
+    // Função para obter valor numérico puro do campo formatado
+    function obterValorNumerico(input) {
+        const valorFormatado = input.value;
+        const apenasNumeros = extrairNumeros(valorFormatado);
+        if (!apenasNumeros) return 0;
+        return parseFloat(centavosParaReais(apenasNumeros));
+    }
+
+    // Função para aplicar máscara em tempo real
+    function aplicarMascaraMoeda(input) {
+        let valor = extrairNumeros(input.value);
+        if (!valor) {
+            input.value = '';
+            return;
+        }
+        const valorEmReais = centavosParaReais(valor);
+        input.value = formatarMoedaBRL(valorEmReais);
+    }
+
+    // Aplicar máscara nos campos de moeda
+    [metaInput, recursosInput, gastoInput].forEach(input => {
+        input.addEventListener('input', function() {
+            aplicarMascaraMoeda(this);
+        });
+
+        input.addEventListener('focus', function() {
+            // Remove formatação ao focar para facilitar edição
+            const valorNumerico = obterValorNumerico(this);
+            if (valorNumerico > 0) {
+                this.value = formatarMoedaBRL(valorNumerico);
+            }
+        });
+    });
+
+    // Carregar valores salvos com formatação
+    if (dados.meta) {
+        metaInput.value = formatarMoedaBRL(dados.meta);
+    }
+    if (dados.recursos) {
+        recursosInput.value = formatarMoedaBRL(dados.recursos);
+    }
+
+    // -------------------------- FIM DA MÁSCARA DE MOEDA BRL --------------------------
 
     const appInit = await window.AppDB.ready();
     if (appInit.shouldPromptExport && appInit.pendingExportMonthKey && appInit.pendingExportData) {
@@ -44,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Função para atualizar o resumo
     function atualizarResumo() {
-        const recursos = parseFloat(recursosInput.value) || 0;
+        const recursos = obterValorNumerico(recursosInput);
         const gastos = dados.gastos || [];
         const totalGastos = gastos.reduce((sum, gasto) => sum + gasto.valor, 0);
         const saldoRestante = recursos - totalGastos;
@@ -67,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     function atualizarGrafico() {
         const ctx = document.getElementById('gastosChart').getContext('2d');
         const gastos = dados.gastos || [];
-        const recursos = parseFloat(recursosInput.value) || 0;
+        const recursos = obterValorNumerico(recursosInput);
 
         // Calcular o gasto diário permitido
         const dataAtual = new Date();
@@ -172,10 +234,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        const meta = parseFloat(metaInput.value) || 0; // Usa 0 se vazio
-        const recursos = parseFloat(recursosInput.value);
+        const meta = obterValorNumerico(metaInput); // Usa 0 se vazio
+        const recursos = obterValorNumerico(recursosInput);
         const data = dataInput.value;
-        const gasto = parseFloat(gastoInput.value);
+        const gasto = obterValorNumerico(gastoInput);
         const tipoGasto = tipoGastoInput.value; // Captura a categoria de gasto
 
         // Processamento do formulário
@@ -433,8 +495,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (importedData.monthKey === currentMonthKey) {
                 dados = await window.AppDB.getCurrentData();
-                metaInput.value = dados.meta || '';
-                recursosInput.value = dados.recursos || '';
+                metaInput.value = dados.meta ? formatarMoedaBRL(dados.meta) : '';
+                recursosInput.value = dados.recursos ? formatarMoedaBRL(dados.recursos) : '';
                 atualizarResumo();
             }
 
@@ -454,13 +516,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     function toggleVisibility(inputId, iconId, storageKey) {
         const input = document.getElementById(inputId);
         const icon = document.getElementById(iconId);
+        const isHidden = input.dataset.hidden === 'true';
 
-        if (input.type === "text" || input.type === "number") { // Ajustado para incluir type="number"
-            input.type = "password";
+        if (!isHidden) {
+            input.dataset.hidden = 'true';
+            input.style.webkitTextSecurity = 'disc';
+            input.style.textSecurity = 'disc';
             icon.classList.replace('bi-eye', 'bi-eye-slash');
             localStorage.setItem(storageKey, "hidden");
         } else {
-            input.type = "text";
+            input.dataset.hidden = 'false';
+            input.style.webkitTextSecurity = 'none';
+            input.style.textSecurity = 'none';
             icon.classList.replace('bi-eye-slash', 'bi-eye');
             localStorage.setItem(storageKey, "visible");
         }
@@ -473,10 +540,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         const visibilityState = localStorage.getItem(storageKey);
 
         if (visibilityState === "hidden") {
-            input.type = "password";
+            input.dataset.hidden = 'true';
+            input.style.webkitTextSecurity = 'disc';
+            input.style.textSecurity = 'disc';
             icon.classList.replace('bi-eye', 'bi-eye-slash');
         } else {
-            input.type = "text";
+            input.dataset.hidden = 'false';
+            input.style.webkitTextSecurity = 'none';
+            input.style.textSecurity = 'none';
             icon.classList.replace('bi-eye-slash', 'bi-eye');
         }
     }

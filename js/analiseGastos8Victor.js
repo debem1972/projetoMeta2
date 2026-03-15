@@ -24,7 +24,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     async function gerarAnalise() {
         const dados = await window.AppDB.getCurrentData();
-        const recursos = parseFloat(document.getElementById('recursos').value) || dados.recursos || 0;
+        // Extrair valor numérico do campo recursos
+        const recursosInput = document.getElementById('recursos');
+        const recursosValue = recursosInput.value.replace(/[^0-9,]/g, '').replace(',', '.');
+        const recursos = parseFloat(recursosValue) || dados.recursos || 0;
         const gastos = dados.gastos || [];
 
         const dataAtual = new Date();
