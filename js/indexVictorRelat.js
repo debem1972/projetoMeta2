@@ -158,8 +158,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     async function validarESubmeter(e) {
         e.preventDefault();  // Previne o comportamento padrão do formulário
 
-        // Validação dos campos
-        if (metaInput.value.trim() === '' || recursosInput.value.trim() === '' || dataInput.value.trim() === '' || gastoInput.value.trim() === '' || tipoGastoInput.value.trim() === '') {
+        // Validação dos campos (meta agora é opcional)
+        if (recursosInput.value.trim() === '' || dataInput.value.trim() === '' || gastoInput.value.trim() === '' || tipoGastoInput.value.trim() === '') {
             try {
                 erroCamposVazios.play();
             } catch (error) {
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        const meta = parseFloat(metaInput.value);
+        const meta = parseFloat(metaInput.value) || 0; // Usa 0 se vazio
         const recursos = parseFloat(recursosInput.value);
         const data = dataInput.value;
         const gasto = parseFloat(gastoInput.value);
@@ -226,8 +226,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Informações gerais
         doc.setFontSize(12);
-        doc.text(`Meta de Economia: ${dados.meta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 20, 40);
-        doc.text(`Recursos Disponíveis: ${dados.recursos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 20, 50);
+        const metaValue = dados.meta || 0;
+        if (metaValue > 0) {
+            doc.text(`Meta de Economia: ${metaValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 20, 40);
+            doc.text(`Recursos Disponíveis: ${dados.recursos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 20, 50);
+        } else {
+            doc.text(`Recursos Disponíveis: ${dados.recursos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 20, 40);
+        }
 
         // Tabela de gastos
         doc.setFontSize(10);
