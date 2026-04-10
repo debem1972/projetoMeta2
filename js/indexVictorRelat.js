@@ -24,6 +24,41 @@ document.addEventListener('DOMContentLoaded', async function () {
     let dados = (await window.AppDB.getCurrentData()) || { gastos: [] };
     dados.gastos = Array.isArray(dados.gastos) ? dados.gastos : [];
 
+    function obterUltimoDiaDoMes(dataReferencia) {
+        return new Date(dataReferencia.getFullYear(), dataReferencia.getMonth() + 1, 0).getDate();
+    }
+
+    function obterDiasAteFimDoMes(dataReferencia) {
+        return Math.max(obterUltimoDiaDoMes(dataReferencia) - dataReferencia.getDate(), 0);
+    }
+
+    function obterDivisorDiario(dataReferencia) {
+        return Math.max(obterDiasAteFimDoMes(dataReferencia), 1);
+    }
+
+    function calcularOrcamentoDisponivel(recursos, meta, totalGastos = 0) {
+        return Math.max((recursos - meta) - totalGastos, 0);
+    }
+
+    function parseLocalDate(dateValue) {
+        if (!dateValue) return null;
+
+        const isoDateOnly = String(dateValue).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (isoDateOnly) {
+            const year = Number(isoDateOnly[1]);
+            const month = Number(isoDateOnly[2]) - 1;
+            const day = Number(isoDateOnly[3]);
+            const parsed = new Date(year, month, day);
+            parsed.setHours(0, 0, 0, 0);
+            return parsed;
+        }
+
+        const parsed = new Date(dateValue);
+        if (Number.isNaN(parsed.getTime())) return null;
+        parsed.setHours(0, 0, 0, 0);
+        return parsed;
+    }
+
     // -------------------------- MÁSCARA DE MOEDA BRL --------------------------
     
     // Função para formatar valor em BRL
@@ -125,14 +160,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Função para atualizar o resumo
     function atualizarResumo() {
         const recursos = obterValorNumerico(recursosInput);
+        const meta = obterValorNumerico(metaInput);
         const gastos = dados.gastos || [];
         const totalGastos = gastos.reduce((sum, gasto) => sum + gasto.valor, 0);
-        const saldoRestante = recursos - totalGastos;
+        const saldoRestante = calcularOrcamentoDisponivel(recursos, meta, totalGastos);
 
         const dataAtual = new Date();
-        const ultimoDiaMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate();
-        const diasRestantes = ultimoDiaMes - dataAtual.getDate();
-        const gastoDiario = diasRestantes > 0 ? (saldoRestante / diasRestantes) : 0;
+        const diasRestantes = obterDiasAteFimDoMes(dataAtual);
+        const gastoDiario = saldoRestante / obterDivisorDiario(dataAtual);
 
         const saldoText = `Saldo Restante: ${saldoRestante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
         const gastoText = `Saldo Diário Disponível: ${gastoDiario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
@@ -150,26 +185,36 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Função para atualizar o gráfico
     function atualizarGrafico() {
         const ctx = document.getElementById('gastosChart').getContext('2d');
-        const gastos = dados.gastos || [];
         const recursos = obterValorNumerico(recursosInput);
+        const meta = obterValorNumerico(metaInput);
+        const gastos = [...(dados.gastos || [])]
+            .filter(gasto => parseLocalDate(gasto.data))
+            .sort((a, b) => parseLocalDate(a.data) - parseLocalDate(b.data));
 
-        // Calcular o gasto diário permitido
-        const dataAtual = new Date();
-        const ultimoDiaMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate();
-        const gastoDiarioPermitido = recursos / ultimoDiaMes;
-
-        // Agrupar gastos por dia
         const gastosPorDia = {};
         gastos.forEach(gasto => {
-            const data = gasto.data.split('-')[2]; // Pega apenas o dia
-            gastosPorDia[data] = (gastosPorDia[data] || 0) + gasto.valor;
+            if (!gastosPorDia[gasto.data]) {
+                gastosPorDia[gasto.data] = 0;
+            }
+            gastosPorDia[gasto.data] += gasto.valor;
         });
 
-        const labels = Object.keys(gastosPorDia).sort((a, b) => a - b);
-        const values = labels.map(dia => gastosPorDia[dia]);
+        const datasOrdenadas = Object.keys(gastosPorDia).sort((a, b) => parseLocalDate(a) - parseLocalDate(b));
+        const labels = datasOrdenadas.map(data => data.split('-')[2]);
+        const values = datasOrdenadas.map(data => gastosPorDia[data]);
+        const limitesPorDia = [];
+        let saldoAntesDoDia = Math.max(recursos - meta, 0);
+
+        datasOrdenadas.forEach(data => {
+            const dataLancamento = parseLocalDate(data);
+            const limiteDoDia = saldoAntesDoDia / obterDivisorDiario(dataLancamento);
+            limitesPorDia.push(limiteDoDia);
+            saldoAntesDoDia = Math.max(saldoAntesDoDia - gastosPorDia[data], 0);
+        });
 
         // Determinar as cores das barras
-        const backgroundColors = values.map(valor => {
+        const backgroundColors = values.map((valor, index) => {
+            const gastoDiarioPermitido = limitesPorDia[index] || 0;
             if (valor < gastoDiarioPermitido) {
                 return 'rgba(50, 205, 50, 0.7)'; // Verde para abaixo do limite
             } else if (valor === gastoDiarioPermitido) {
@@ -220,6 +265,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 if (context.parsed.y !== null) {
                                     label += context.parsed.y.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                                 }
+                                const gastoDiarioPermitido = limitesPorDia[context.dataIndex] || 0;
                                 const diff = context.parsed.y - gastoDiarioPermitido;
                                 if (diff < 0) {
                                     label += ` (${Math.abs(diff).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} abaixo do limite)`;

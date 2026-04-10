@@ -6,6 +6,34 @@ document.addEventListener('DOMContentLoaded', async function () {
     const categoriaFiltro = document.getElementById('categoriaFiltro');
     const somAlert = document.getElementById('somErro');
 
+    function obterUltimoDiaDoMes(dataReferencia) {
+        return new Date(dataReferencia.getFullYear(), dataReferencia.getMonth() + 1, 0).getDate();
+    }
+
+    function obterDiasAteFimDoMes(dataReferencia) {
+        return Math.max(obterUltimoDiaDoMes(dataReferencia) - dataReferencia.getDate(), 0);
+    }
+
+    function obterDivisorDiario(dataReferencia) {
+        return Math.max(obterDiasAteFimDoMes(dataReferencia), 1);
+    }
+
+    function calcularSaldoDisponivel(recursos, meta, totalGastos) {
+        return Math.max((recursos - meta) - totalGastos, 0);
+    }
+
+    function obterValorMonetario(inputId, fallback = 0) {
+        const input = document.getElementById(inputId);
+        if (!input) return fallback;
+
+        const valor = input.value
+            .replace(/[R$\s]/g, '')
+            .replace(/\./g, '')
+            .replace(',', '.');
+
+        return parseFloat(valor) || fallback;
+    }
+
     function parseLocalDate(dateValue) {
         if (!dateValue) return null;
 
@@ -64,13 +92,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     async function gerarAnalise() {
         const dados = await window.AppDB.getCurrentData();
-        // Extrair valor numérico do campo recursos corretamente
-        const recursosInput = document.getElementById('recursos');
-        const recursosValue = recursosInput.value
-            .replace(/[R$\s]/g, '') // Remove R$ e espaços
-            .replace(/\./g, '')      // Remove pontos (separador de milhar)
-            .replace(',', '.');      // Substitui vírgula por ponto (decimal)
-        const recursos = parseFloat(recursosValue) || dados.recursos || 0;
+        const recursos = obterValorMonetario('recursos', dados.recursos || 0);
+        const meta = obterValorMonetario('meta', dados.meta || 0);
         const gastos = dados.gastos || [];
 
         const dataAtual = new Date();
@@ -124,29 +147,21 @@ document.addEventListener('DOMContentLoaded', async function () {
         const totalGastos = gastosFiltrados.reduce((sum, gasto) => sum + gasto.valor, 0);
         const mediaGastos = totalGastos / diasAnalisados;
         
-        // Calcular dias restantes do mês
-        const ultimoDiaMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate();
-        const diasRestantes = ultimoDiaMes - diasAnalisados;
-        
-        // Projeção de gastos até o final do mês
-        const previsaoFimMes = mediaGastos * diasRestantes;
-        
-        // Saldo restante após os gastos analisados
-        const saldoRestante = recursos - totalGastos;
-        
-        // Limite diário para os dias restantes
-        const mediaPermitida = diasRestantes > 0 ? saldoRestante / diasRestantes : 0;
+        const diasRestantes = obterDiasAteFimDoMes(dataAtual);
+        const totalGastosGlobal = gastos.reduce((sum, gasto) => sum + gasto.valor, 0);
+        const saldoRestante = calcularSaldoDisponivel(recursos, meta, totalGastosGlobal);
+        const mediaPermitida = saldoRestante / obterDivisorDiario(dataAtual);
+        const previsaoFimMes = totalGastosGlobal + (mediaGastos * diasRestantes);
 
         let analise;
         if (categoriaSelecionada) {
-            const totalGastosGlobal = gastos.reduce((sum, gasto) => sum + gasto.valor, 0);
             const porcentagemCategoria = totalGastosGlobal > 0 ? ((totalGastos / totalGastosGlobal) * 100).toFixed(2) : '0.00';
             analise = `Você gastou ${totalGastos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} com <b><i>${categoriaSelecionada}</i></b> `;
             analise += `nos ${diasAnalisados} ${diasAnalisados === 1 ? 'dia' : 'dias'} analisados, o que representa ${porcentagemCategoria}% dos gastos totais.`;
         } else {
             const percentualRecursos = recursos > 0 ? ((totalGastos / recursos) * 100).toFixed(2) : '0.00';
             analise = `Você já consumiu ${totalGastos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}, o que equivale a ${percentualRecursos}% dos seus recursos disponíveis. `;
-            analise += `Seu saldo disponível após esse período é de ${saldoRestante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}. `;
+            analise += `Seu saldo disponível hoje é de ${saldoRestante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}. `;
             analise += `A média de gastos diários nos ${diasAnalisados} ${diasAnalisados === 1 ? 'dia' : 'dias'} é de ${mediaGastos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}. `;
             
             if (diasRestantes > 0) {
@@ -157,10 +172,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
 
-        if (totalGastos > recursos) {
+        if (totalGastosGlobal > (recursos - meta)) {
             analise += ' Você já ultrapassou seus recursos!';
             showModal('Alerta de Gastos!', analise, 'modal-danger');
-        } else if (saldoRestante <= mediaGastos) {
+        } else if (!categoriaSelecionada && mediaGastos > mediaPermitida) {
             analise += ' Atenção redobrada nos próximos gastos.';
             showModal('Atenção!', analise, 'modal-warning');
         } else {
