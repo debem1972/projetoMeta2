@@ -12,6 +12,8 @@ O `projetoMeta2` é uma evolução da primeira versão do projeto, trazendo recu
 - Solicitação de exportação dos dados do mês anterior na primeira abertura do novo mês.
 - Melhorias no cálculo de dias restantes e no saldo diário disponível.
 - Filtros de análise por período e categoria.
+- Implementado um Loader ao projeto após a criação da logo.
+- Implementado o PWA ao projeto, que agora é capaz de ser instalado.
 
 ## Funcionalidades principais
 - Cadastro de meta, recursos, data, valor e categoria de gasto.
