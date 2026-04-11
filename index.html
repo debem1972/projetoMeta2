@@ -5,16 +5,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Aplicação web para gestão de gastos pessoais">
+    <meta name="theme-color" content="#1658e4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MetaDois">
     <meta name="keywords"
         content="Aplicação web de finanças pessoais, gestão de finanças pessoais, mobile, app responsivo,responsividade, app web com bootstrap5 ,programação web">
     <meta name="author" content="Daniel Lopes Bemfica">
     <title>Controle de Gastos Diários</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="./pwa/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./pwa/icons/icon-192.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
         integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="./loader/loader.css">
     <link rel="stylesheet" href="./css/style1.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -22,6 +30,27 @@
 </head>
 
 <body>
+    <div class="pm2-loader" aria-label="Carregando aplicação Controle de Gastos Diários">
+        <div class="pm2-loader__logo" aria-hidden="true">
+            <div class="pm2-loader__surface pm2-loader__surface--left"></div>
+            <div class="pm2-loader__surface pm2-loader__surface--right"></div>
+            <div class="pm2-loader__divider"></div>
+            <div class="pm2-loader__dollar">
+                <span class="pm2-loader__dollar-stem"></span>
+                <span class="pm2-loader__dollar-shape">$</span>
+            </div>
+            <div class="pm2-loader__lines">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="pm2-loader__check">
+                <span class="pm2-loader__check-short"></span>
+                <span class="pm2-loader__check-long"></span>
+            </div>
+        </div>
+    </div>
+
     <div class="container mt-5">
         <!-- Formulário de Entrada -->
         <div class="card">
@@ -406,6 +435,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+    <script src="./pwa/register-sw.js"></script>
+    <script src="./loader/loader.js"></script>
     <script src="./js/indexedDbStorage.js"></script>
     <script src="./js/indexVictorRelat.js"></script>
     <script src="./js/editModal11.js"></script>

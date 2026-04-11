@@ -28,6 +28,7 @@ O `projetoMeta2` é uma evolução da primeira versão do projeto, trazendo recu
 - Bootstrap 5
 - JavaScript
 - IndexedDB
+- Progressive Web App (PWA)
 - Chart.js
 - jsPDF
 
@@ -50,3 +51,9 @@ Ao detectar a entrada em um novo mês, a aplicação:
 Projeto com foco didático e de portfólio.
 
 Por se tratar de um projeto educacional, solicita-se não comercializar este programa.
+
+## Base PWA
+- Manifesto web configurado em `manifest.webmanifest`.
+- `service-worker.js` para cache do shell principal da aplicação.
+- Registro do service worker em `pwa/register-sw.js`.
+- Ícones de instalação em `pwa/icons/`.

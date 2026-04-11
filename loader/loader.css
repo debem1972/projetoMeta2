@@ -1,0 +1,251 @@
+.pm2-loader {
+    --pm2-loader-blue-strong: #1658e4;
+    --pm2-loader-blue-mid: #2e86ef;
+    --pm2-loader-blue-soft: #b9d9ff;
+    --pm2-loader-blue-soft-deep: #79aef2;
+    --pm2-loader-white: #ffffff;
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at center, rgba(22, 88, 228, 0.06), transparent 45%),
+        #ffffff;
+    z-index: 9999;
+    transition: opacity 0.55s ease, visibility 0.55s ease;
+}
+
+.pm2-loader.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.pm2-loader__logo {
+    position: relative;
+    width: min(48vw, 340px);
+    aspect-ratio: 1 / 1;
+    animation: pm2-loader-intro-float 1s ease-out forwards, pm2-loader-idle-pulse 2.8s 1.2s ease-in-out infinite;
+}
+
+.pm2-loader__surface {
+    position: absolute;
+    top: 6%;
+    bottom: 6%;
+    width: 45%;
+    transform: scale(0.82);
+    opacity: 0;
+    animation: pm2-loader-reveal-circle 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.pm2-loader__surface--left {
+    left: 6%;
+    border-radius: 999px 0 0 999px;
+    background: linear-gradient(180deg, var(--pm2-loader-blue-mid) 0%, var(--pm2-loader-blue-strong) 82%);
+}
+
+.pm2-loader__surface--right {
+    right: 6%;
+    border-radius: 0 999px 999px 0;
+    background: linear-gradient(180deg, var(--pm2-loader-blue-soft) 0%, var(--pm2-loader-blue-soft-deep) 88%);
+}
+
+.pm2-loader__divider {
+    position: absolute;
+    top: 7%;
+    bottom: 7%;
+    left: 50%;
+    width: 5.2%;
+    border-radius: 999px;
+    background: var(--pm2-loader-white);
+    transform: translateX(-50%) scaleY(0);
+    transform-origin: center top;
+    animation: pm2-loader-grow-divider 0.7s 0.55s ease-out forwards;
+}
+
+.pm2-loader__dollar {
+    position: absolute;
+    top: 17%;
+    left: 23%;
+    width: 40%;
+    height: 66%;
+    opacity: 0;
+    transform: translateY(12px) scale(0.92);
+    animation: pm2-loader-reveal-mark 0.8s 0.85s ease-out forwards;
+}
+
+.pm2-loader__dollar-shape {
+    position: absolute;
+    inset: 0;
+    color: var(--pm2-loader-white);
+    font-size: clamp(8rem, 19vw, 13rem);
+    line-height: 1;
+    font-weight: 700;
+    display: block;
+    text-align: center;
+    transform: scaleX(0.92);
+}
+
+.pm2-loader__dollar-stem {
+    position: absolute;
+    top: 5%;
+    bottom: 5%;
+    left: 52%;
+    width: 10%;
+    border-radius: 999px;
+    background: var(--pm2-loader-white);
+    transform: translateX(-50%);
+}
+
+.pm2-loader__lines {
+    position: absolute;
+    top: 34%;
+    right: 16%;
+    width: 25%;
+    display: grid;
+    gap: 7%;
+    opacity: 0;
+    transform: translateX(18px);
+    animation: pm2-loader-slide-in-right 0.7s 1.05s ease-out forwards;
+}
+
+.pm2-loader__lines span {
+    display: block;
+    height: 6%;
+    min-height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #2575ea 0%, #1c63ea 100%);
+}
+
+.pm2-loader__check {
+    position: absolute;
+    right: 13%;
+    bottom: 15%;
+    width: 31%;
+    height: 25%;
+    opacity: 0;
+    transform: translateY(18px) scale(0.9);
+    animation: pm2-loader-reveal-mark 0.8s 1.2s ease-out forwards;
+}
+
+.pm2-loader__check span {
+    position: absolute;
+    display: block;
+    height: 14%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1d63e9 0%, #1557e1 100%);
+}
+
+.pm2-loader__check-short {
+    width: 26%;
+    left: 10%;
+    bottom: 20%;
+    transform: rotate(46deg);
+    transform-origin: 100% 50%;
+}
+
+.pm2-loader__check-long {
+    width: 58%;
+    left: 27%;
+    bottom: 19%;
+    transform: rotate(-44deg);
+    transform-origin: 0 50%;
+}
+
+@keyframes pm2-loader-reveal-circle {
+    from {
+        opacity: 0;
+        transform: scale(0.82);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pm2-loader-grow-divider {
+    from {
+        transform: translateX(-50%) scaleY(0);
+    }
+
+    to {
+        transform: translateX(-50%) scaleY(1);
+    }
+}
+
+@keyframes pm2-loader-reveal-mark {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.92);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes pm2-loader-slide-in-right {
+    from {
+        opacity: 0;
+        transform: translateX(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pm2-loader-intro-float {
+    from {
+        transform: translateY(16px);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes pm2-loader-idle-pulse {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+@media (max-width: 480px) {
+    .pm2-loader__logo {
+        width: min(68vw, 280px);
+    }
+
+    .pm2-loader__lines span {
+        min-height: 9px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pm2-loader,
+    .pm2-loader__logo,
+    .pm2-loader__surface,
+    .pm2-loader__divider,
+    .pm2-loader__dollar,
+    .pm2-loader__lines,
+    .pm2-loader__check {
+        animation: none;
+        transition: none;
+    }
+
+    .pm2-loader__surface,
+    .pm2-loader__divider,
+    .pm2-loader__dollar,
+    .pm2-loader__lines,
+    .pm2-loader__check {
+        opacity: 1;
+        transform: none;
+    }
+}

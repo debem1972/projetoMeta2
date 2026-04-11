@@ -1,0 +1,31 @@
+{
+    "name": "Controle de Gastos Diarios",
+    "short_name": "MetaDois",
+    "description": "Aplicacao web para controle diario de gastos pessoais.",
+    "lang": "pt-BR",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#ffffff",
+    "theme_color": "#1658e4",
+    "categories": [
+        "finance",
+        "productivity",
+        "utilities"
+    ],
+    "icons": [
+        {
+            "src": "./pwa/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "./pwa/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
