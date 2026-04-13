@@ -1,5 +1,5 @@
-const STATIC_CACHE = "pm2-static-v1";
-const RUNTIME_CACHE = "pm2-runtime-v1";
+const STATIC_CACHE = "pm2-static-v2";
+const RUNTIME_CACHE = "pm2-runtime-v2";
 
 const LOCAL_ASSETS = [
     "./",
@@ -113,7 +113,7 @@ self.addEventListener("fetch", (event) => {
 
                 return networkResponse;
             } catch (error) {
-                return caches.match("./index.html");
+                return cachedResponse || Response.error();
             }
         })()
     );
