@@ -59,8 +59,89 @@ document.addEventListener('DOMContentLoaded', async function () {
         return parsed;
     }
 
+    function formatarDataBR(dateValue) {
+        const parsed = parseLocalDate(dateValue);
+        return parsed ? parsed.toLocaleDateString('pt-BR') : '';
+    }
+
+    function obterMapaGastosPorDia(gastos) {
+        return (gastos || []).reduce((acc, gasto) => {
+            const parsedDate = parseLocalDate(gasto.data);
+            if (!parsedDate) return acc;
+            if (!acc[gasto.data]) {
+                acc[gasto.data] = 0;
+            }
+            acc[gasto.data] += gasto.valor;
+            return acc;
+        }, {});
+    }
+
+    function calcularLimiteDiarioDaData(dataAlvo, gastos, recursos, meta) {
+        const parsedTargetDate = parseLocalDate(dataAlvo);
+        if (!parsedTargetDate) {
+            return { limiteDoDia: 0, gastoDoDia: 0, saldoRestanteDoDia: 0 };
+        }
+
+        const gastosPorDia = obterMapaGastosPorDia(gastos);
+        const datasOrdenadas = Object.keys(gastosPorDia).sort((a, b) => parseLocalDate(a) - parseLocalDate(b));
+        let saldoAntesDoDia = Math.max(recursos - meta, 0);
+
+        for (const data of datasOrdenadas) {
+            const dataLancamento = parseLocalDate(data);
+            const limiteDoDia = saldoAntesDoDia / obterDivisorDiario(dataLancamento);
+            const gastoDoDia = gastosPorDia[data];
+
+            if (data === dataAlvo) {
+                return {
+                    limiteDoDia,
+                    gastoDoDia,
+                    saldoRestanteDoDia: limiteDoDia - gastoDoDia
+                };
+            }
+
+            if (dataLancamento <= parsedTargetDate) {
+                saldoAntesDoDia = Math.max(saldoAntesDoDia - gastoDoDia, 0);
+            }
+        }
+
+        return {
+            limiteDoDia: saldoAntesDoDia / obterDivisorDiario(parsedTargetDate),
+            gastoDoDia: 0,
+            saldoRestanteDoDia: saldoAntesDoDia / obterDivisorDiario(parsedTargetDate)
+        };
+    }
+
+    let toastTimer;
+
+    function mostrarToastSaldoDia(mensagem, tipo = 'success') {
+        let toast = document.getElementById('dailyBalanceToast');
+
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'dailyBalanceToast';
+            toast.className = 'daily-balance-toast';
+            document.body.appendChild(toast);
+        }
+
+        toast.classList.remove('is-success', 'is-danger', 'is-visible');
+        toast.classList.add(tipo === 'danger' ? 'is-danger' : 'is-success');
+        toast.textContent = mensagem;
+
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+        }
+
+        requestAnimationFrame(() => {
+            toast.classList.add('is-visible');
+        });
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove('is-visible');
+        }, 5000);
+    }
+
     // -------------------------- MÁSCARA DE MOEDA BRL --------------------------
-    
+
     // Função para formatar valor em BRL
     function formatarMoedaBRL(valor) {
         if (!valor) return '';
@@ -100,11 +181,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Aplicar máscara nos campos de moeda
     [metaInput, recursosInput, gastoInput].forEach(input => {
-        input.addEventListener('input', function() {
+        input.addEventListener('input', function () {
             aplicarMascaraMoeda(this);
         });
 
-        input.addEventListener('focus', function() {
+        input.addEventListener('focus', function () {
             // Remove formatação ao focar para facilitar edição
             const valorNumerico = obterValorNumerico(this);
             if (valorNumerico > 0) {
@@ -191,13 +272,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             .filter(gasto => parseLocalDate(gasto.data))
             .sort((a, b) => parseLocalDate(a.data) - parseLocalDate(b.data));
 
-        const gastosPorDia = {};
-        gastos.forEach(gasto => {
-            if (!gastosPorDia[gasto.data]) {
-                gastosPorDia[gasto.data] = 0;
-            }
-            gastosPorDia[gasto.data] += gasto.valor;
-        });
+        const gastosPorDia = obterMapaGastosPorDia(gastos);
 
         const datasOrdenadas = Object.keys(gastosPorDia).sort((a, b) => parseLocalDate(a) - parseLocalDate(b));
         const labels = datasOrdenadas.map(data => data.split('-')[2]);
@@ -316,6 +391,25 @@ document.addEventListener('DOMContentLoaded', async function () {
         dados.gastos.push({ data, valor: gasto, categoria: tipoGasto });  // Salva a categoria junto com os outros dados
 
         await window.AppDB.saveCurrentData(dados);
+
+        const { saldoRestanteDoDia } = calcularLimiteDiarioDaData(data, dados.gastos, recursos, meta);
+        const dataLancamentoFormatada = formatarDataBR(data);
+        const hojeFormatado = formatarDataBR(new Date());
+        const referenciaDia = dataLancamentoFormatada === hojeFormatado
+            ? 'do saldo do dia de hoje'
+            : `do saldo do dia ${dataLancamentoFormatada}`;
+
+        if (saldoRestanteDoDia >= 0) {
+            mostrarToastSaldoDia(
+                `Você ainda possui ${saldoRestanteDoDia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ${referenciaDia} para consumir! Mantenha-se na meta!`,
+                'success'
+            );
+        } else {
+            mostrarToastSaldoDia(
+                `Você ultrapassou ${Math.abs(saldoRestanteDoDia).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ${referenciaDia}!`,
+                'danger'
+            );
+        }
 
         // Toca o som de caixa registradora ao clicar no botão Adicionar Gasto
         caixaRegister.play();
@@ -662,8 +756,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // -------------------------- FIM DAS FUNÇÕES DE TOGGLING --------------------------
 
-   
-    
+
+
 
     // Atualizar o resumo e gráfico na inicialização
     atualizarResumo();
