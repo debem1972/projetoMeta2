@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     const exportarJsonBtn = document.getElementById('exportarJsonBtn');
     const importarJsonBtn = document.getElementById('importarJsonBtn');
     const importarJsonInput = document.getElementById('importarJsonInput');
+    const monthViewBanner = document.getElementById('monthViewBanner');
+    const jsonImportFeedback = document.getElementById('jsonImportFeedback');
     const caixaRegister = document.getElementById('som4');
     const novoLimiteVoice = document.getElementById('som5');
     const erroCamposVazios = document.getElementById('somErro');
@@ -23,6 +25,81 @@ document.addEventListener('DOMContentLoaded', async function () {
     let gastosChart;
     let dados = (await window.AppDB.getCurrentData()) || { gastos: [] };
     dados.gastos = Array.isArray(dados.gastos) ? dados.gastos : [];
+    const appInit = await window.AppDB.ready();
+    let currentMonthKey = appInit.currentMonthKey;
+    let activeMonthKey = appInit.activeMonthKey || currentMonthKey;
+
+    function getDateFromMonthKey(monthKey, useLastDay = false) {
+        const match = String(monthKey || '').match(/^(\d{4})-(\d{2})$/);
+        if (!match) return new Date();
+
+        const year = Number(match[1]);
+        const monthIndex = Number(match[2]) - 1;
+        return useLastDay
+            ? new Date(year, monthIndex + 1, 0)
+            : new Date(year, monthIndex, 1);
+    }
+
+    function formatMonthLabel(monthKey) {
+        return getDateFromMonthKey(monthKey).toLocaleDateString('pt-BR', {
+            month: 'long',
+            year: 'numeric'
+        });
+    }
+
+    function getReferenceDate() {
+        if (activeMonthKey === currentMonthKey) {
+            return new Date();
+        }
+
+        return getDateFromMonthKey(activeMonthKey, true);
+    }
+
+    function renderMonthViewBanner() {
+        if (!monthViewBanner) return;
+
+        if (activeMonthKey === currentMonthKey) {
+            monthViewBanner.hidden = true;
+            monthViewBanner.innerHTML = '';
+            return;
+        }
+
+        monthViewBanner.hidden = false;
+        monthViewBanner.innerHTML = `
+            <p>Visualizando os dados de <strong>${formatMonthLabel(activeMonthKey)}</strong>. Novos lançamentos e edições serão aplicados nesse mês.</p>
+            <button type="button" class="btn btn-sm btn-outline-dark" id="voltarMesAtualBtn">
+                Voltar para ${formatMonthLabel(currentMonthKey)}
+            </button>
+        `;
+
+        document.getElementById('voltarMesAtualBtn')?.addEventListener('click', async function () {
+            await window.AppDB.resetActiveMonthKey();
+            location.reload();
+        });
+    }
+
+    function hideImportFeedback() {
+        if (!jsonImportFeedback) return;
+        jsonImportFeedback.hidden = true;
+        jsonImportFeedback.innerHTML = '';
+    }
+
+    function showImportFeedback(importedMonthKey) {
+        if (!jsonImportFeedback) return;
+
+        jsonImportFeedback.hidden = false;
+        jsonImportFeedback.innerHTML = `
+            <p>Importação concluída para <strong>${formatMonthLabel(importedMonthKey)}</strong>. Deseja abrir esse mês agora na aplicação?</p>
+            <button type="button" class="btn btn-sm btn-success" id="abrirMesImportadoBtn">
+                Abrir mês importado
+            </button>
+        `;
+
+        document.getElementById('abrirMesImportadoBtn')?.addEventListener('click', async function () {
+            await window.AppDB.setActiveMonthKey(importedMonthKey);
+            location.reload();
+        });
+    }
 
     function obterUltimoDiaDoMes(dataReferencia) {
         return new Date(dataReferencia.getFullYear(), dataReferencia.getMonth() + 1, 0).getDate();
@@ -204,7 +281,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // -------------------------- FIM DA MÁSCARA DE MOEDA BRL --------------------------
 
-    const appInit = await window.AppDB.ready();
     if (appInit.shouldPromptExport && appInit.pendingExportMonthKey && appInit.pendingExportData) {
         const confirmExport = confirm(
             `Novo mês detectado. Deseja exportar agora os dados de ${appInit.pendingExportMonthKey} em JSON?`
@@ -219,6 +295,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             alert('Você pode exportar depois pelo botão "Exportar Dados JSON".');
         }
     }
+
+    renderMonthViewBanner();
 
     const RESUMO_VISIBILITY_STORAGE_KEY = 'financeVisibility';
     const RESUMO_MASK_TOKEN = '******';
@@ -246,7 +324,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const totalGastos = gastos.reduce((sum, gasto) => sum + gasto.valor, 0);
         const saldoRestante = calcularOrcamentoDisponivel(recursos, meta, totalGastos);
 
-        const dataAtual = new Date();
+        const dataAtual = getReferenceDate();
         const diasRestantes = obterDiasAteFimDoMes(dataAtual);
         const gastoDiario = saldoRestante / obterDivisorDiario(dataAtual);
 
@@ -444,8 +522,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         doc.setFontSize(16);
 
         // Cabeçalho
-        const dataAtual = new Date();
-        const mesAno = dataAtual.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+        const dataAtual = getReferenceDate();
+        const mesAno = formatMonthLabel(activeMonthKey);
         doc.text(`Relatório de Gastos Diários - ${mesAno}`, 105, 20, { align: "center" });
 
         // Informações gerais
@@ -637,7 +715,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
         const exported = await window.AppDB.exportMonthData(dados.monthKey);
         if (exported) {
-            alert('Dados do mês atual exportados com sucesso.');
+            alert(`Dados de ${formatMonthLabel(dados.monthKey)} exportados com sucesso.`);
         }
     });
 
@@ -653,16 +731,22 @@ document.addEventListener('DOMContentLoaded', async function () {
             const textContent = await file.text();
             const parsedJson = JSON.parse(textContent);
             const importedData = await window.AppDB.importMonthData(parsedJson);
-            const currentMonthKey = await window.AppDB.getCurrentMonthKey();
+            hideImportFeedback();
 
-            if (importedData.monthKey === currentMonthKey) {
+            if (importedData.monthKey === activeMonthKey) {
                 dados = await window.AppDB.getCurrentData();
                 metaInput.value = dados.meta ? formatarMoedaBRL(dados.meta) : '';
                 recursosInput.value = dados.recursos ? formatarMoedaBRL(dados.recursos) : '';
                 atualizarResumo();
+            } else {
+                showImportFeedback(importedData.monthKey);
             }
 
-            alert(`Importação concluída para o mês ${importedData.monthKey}.`);
+            if (importedData.monthKey === activeMonthKey) {
+                alert(`Importação concluída e os dados de ${formatMonthLabel(importedData.monthKey)} já estão sendo exibidos.`);
+            } else {
+                alert(`Importação concluída para ${formatMonthLabel(importedData.monthKey)}.`);
+            }
         } catch (error) {
             console.error('Erro ao importar JSON:', error);
             alert('Não foi possível importar o arquivo. Verifique se o JSON é válido.');

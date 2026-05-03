@@ -154,6 +154,41 @@ input[type="text"]#gasto {
     flex: 1;
 }
 
+.month-view-banner,
+.json-import-feedback {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.month-view-banner {
+    background: #fff4db;
+    border: 1px solid #f1c56b;
+    color: #7a4b00;
+}
+
+.json-import-feedback {
+    background: #eaf7ee;
+    border: 1px solid #9fd3ad;
+    color: #14532d;
+}
+
+.month-view-banner p,
+.json-import-feedback p {
+    margin: 0;
+    flex: 1 1 220px;
+}
+
+.month-view-banner .btn,
+.json-import-feedback .btn {
+    white-space: nowrap;
+}
+
 .daily-balance-toast {
     position: fixed;
     top: 50%;
@@ -186,8 +221,18 @@ input[type="text"]#gasto {
 }
 
 @media (max-width: 767.98px) {
+    .month-view-banner,
+    .json-import-feedback {
+        align-items: stretch;
+    }
+
     .json-actions .btn {
         min-width: 0;
+    }
+
+    .month-view-banner .btn,
+    .json-import-feedback .btn {
+        width: 100%;
     }
 
     .daily-balance-toast {

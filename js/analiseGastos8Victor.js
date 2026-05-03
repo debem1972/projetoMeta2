@@ -1,10 +1,31 @@
 document.addEventListener('DOMContentLoaded', async function () {
-    await window.AppDB.ready();
+    const appInit = await window.AppDB.ready();
 
     const gerarAnaliseBtn = document.getElementById('btnGerarAnalise');
     const periodoFiltro = document.getElementById('periodoFiltro');
     const categoriaFiltro = document.getElementById('categoriaFiltro');
     const somAlert = document.getElementById('somErro');
+    const currentMonthKey = appInit.currentMonthKey;
+    const activeMonthKey = appInit.activeMonthKey || currentMonthKey;
+
+    function getDateFromMonthKey(monthKey, useLastDay = false) {
+        const match = String(monthKey || '').match(/^(\d{4})-(\d{2})$/);
+        if (!match) return new Date();
+
+        const year = Number(match[1]);
+        const monthIndex = Number(match[2]) - 1;
+        return useLastDay
+            ? new Date(year, monthIndex + 1, 0)
+            : new Date(year, monthIndex, 1);
+    }
+
+    function getReferenceDate() {
+        if (activeMonthKey === currentMonthKey) {
+            return new Date();
+        }
+
+        return getDateFromMonthKey(activeMonthKey, true);
+    }
 
     function obterUltimoDiaDoMes(dataReferencia) {
         return new Date(dataReferencia.getFullYear(), dataReferencia.getMonth() + 1, 0).getDate();
@@ -96,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const meta = obterValorMonetario('meta', dados.meta || 0);
         const gastos = dados.gastos || [];
 
-        const dataAtual = new Date();
+        const dataAtual = getReferenceDate();
         dataAtual.setHours(0, 0, 0, 0);
 
         const diasFiltro = parseInt(periodoFiltro.value, 10);

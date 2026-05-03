@@ -165,16 +165,24 @@
         const pendingExportMonthKey = await getState('pendingExportMonthKey');
         const promptedFor = await getState('pendingExportPromptedForMonthKey');
         const shouldPromptExport = Boolean(pendingExportMonthKey) && promptedFor !== currentKey;
+        let activeMonthKey = await getState('activeMonthKey');
+
+        if (!activeMonthKey) {
+            activeMonthKey = currentKey;
+            await setState('activeMonthKey', activeMonthKey);
+        }
 
         if (shouldPromptExport) {
             await setState('pendingExportPromptedForMonthKey', currentKey);
         }
 
         const currentData = await ensureMonthExists(currentKey);
+        await ensureMonthExists(activeMonthKey);
         const pendingExportData = pendingExportMonthKey ? await getMonthData(pendingExportMonthKey) : null;
 
         initResultCache = {
             currentMonthKey: currentKey,
+            activeMonthKey,
             currentData,
             pendingExportMonthKey,
             pendingExportData,
@@ -208,15 +216,15 @@
     }
 
     async function getCurrentData() {
-        const { currentMonthKey } = await init();
-        return (await getMonthData(currentMonthKey)) || createEmptyMonthData(currentMonthKey);
+        const activeMonthKey = await getActiveMonthKey();
+        return (await getMonthData(activeMonthKey)) || createEmptyMonthData(activeMonthKey);
     }
 
     async function saveCurrentData(data) {
-        const { currentMonthKey } = await init();
+        const activeMonthKey = await getActiveMonthKey();
         const normalized = {
             ...data,
-            monthKey: currentMonthKey,
+            monthKey: activeMonthKey,
             meta: Number(data.meta) || 0,
             recursos: Number(data.recursos) || 0,
             gastos: Array.isArray(data.gastos) ? data.gastos : [],
@@ -292,10 +300,44 @@
         return currentMonthKey;
     }
 
+    async function getActiveMonthKey() {
+        const { currentMonthKey, activeMonthKey } = await init();
+        return activeMonthKey || currentMonthKey;
+    }
+
+    async function setActiveMonthKey(monthKey) {
+        if (typeof monthKey !== 'string' || !/^\d{4}-\d{2}$/.test(monthKey)) {
+            throw new Error('monthKey inválido.');
+        }
+
+        await ensureMonthExists(monthKey);
+        await setState('activeMonthKey', monthKey);
+
+        if (initResultCache) {
+            initResultCache.activeMonthKey = monthKey;
+        }
+
+        return monthKey;
+    }
+
+    async function resetActiveMonthKey() {
+        const currentMonthKey = await getCurrentMonthKey();
+        await setState('activeMonthKey', currentMonthKey);
+
+        if (initResultCache) {
+            initResultCache.activeMonthKey = currentMonthKey;
+        }
+
+        return currentMonthKey;
+    }
+
     window.AppDB = {
         ready: init,
         getCurrentData,
         getCurrentMonthKey,
+        getActiveMonthKey,
+        setActiveMonthKey,
+        resetActiveMonthKey,
         saveCurrentData,
         importMonthData,
         exportMonthData,
