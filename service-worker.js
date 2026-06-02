@@ -1,5 +1,5 @@
-const STATIC_CACHE = "pm2-static-v3";
-const RUNTIME_CACHE = "pm2-runtime-v3";
+const STATIC_CACHE = "pm2-static-v4";
+const RUNTIME_CACHE = "pm2-runtime-v4";
 
 const LOCAL_ASSETS = [
     "./",
@@ -83,18 +83,16 @@ self.addEventListener("fetch", (event) => {
 
     event.respondWith(
         (async () => {
-            const cachedResponse = await caches.match(event.request);
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-
             try {
                 const networkResponse = await fetch(event.request);
-                const runtimeCache = await caches.open(RUNTIME_CACHE);
-                runtimeCache.put(event.request, networkResponse.clone());
+                if (networkResponse && networkResponse.status === 200) {
+                    const cache = await caches.open(STATIC_CACHE);
+                    cache.put(event.request, networkResponse.clone());
+                }
                 return networkResponse;
             } catch (error) {
-                return Response.error();
+                const cachedResponse = await caches.match(event.request);
+                return cachedResponse || Response.error();
             }
         })()
     );

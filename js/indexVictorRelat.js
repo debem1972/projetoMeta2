@@ -536,46 +536,67 @@ document.addEventListener('DOMContentLoaded', async function () {
             doc.text(`Recursos Disponíveis: ${dados.recursos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 20, 40);
         }
 
-        // Tabela de gastos
-        doc.setFontSize(10);
+        // Tabela de gastos (uma linha por lançamento)
+        const COL_DATA = 20;
+        const COL_TIPO = 55;
+        const COL_VALOR = 130;
+        const ROW_HEIGHT = 10;
+        const PAGE_BOTTOM = 270;
+
+        const rotulosCategoria = {
+            carro: 'Carro',
+            casa: 'Casa',
+            educacao: 'Educação',
+            familia: 'Família',
+            lazer: 'Lazer',
+            mercado: 'Mercado',
+            outros: 'Outros',
+            pessoal: 'Pessoal',
+            saude: 'Saúde'
+        };
+
+        function formatarCategoriaRelatorio(categoria) {
+            if (!categoria) return 'Outros';
+            const chave = String(categoria).trim().toLowerCase();
+            return rotulosCategoria[chave] || categoria.charAt(0).toUpperCase() + categoria.slice(1);
+        }
+
         let yPos = 70;
-        doc.text("Data", 20, yPos);
-        doc.text("Valor Gasto", 100, yPos);
-        yPos += 10;
 
-        const gastosPorDia = {};
-        dados.gastos.forEach(gasto => {
-            const dataFormatada = gasto.data.split('-').reverse().join('/');
-            gastosPorDia[dataFormatada] = (gastosPorDia[dataFormatada] || 0) + gasto.valor;
-        });
+        function renderizarCabecalhoTabela() {
+            doc.setFontSize(10);
+            doc.text('Data', COL_DATA, yPos);
+            doc.text('Tipo de gasto', COL_TIPO, yPos);
+            doc.text('Valor Gasto', COL_VALOR, yPos, { align: 'right' });
+            yPos += ROW_HEIGHT;
+        }
 
-        // Ordenar dias cronologicamente
-        const diasOrdenados = Object.keys(gastosPorDia).sort((a, b) => {
-            const [diaA, mesA, anoA] = a.split('/');
-            const [diaB, mesB, anoB] = b.split('/');
-            return new Date(anoA, mesA - 1, diaA) - new Date(anoB, mesB - 1, diaB);
-        });
+        renderizarCabecalhoTabela();
 
-        // Iterar sobre os gastos na ordem correta
-        diasOrdenados.forEach(data => {
-            const valor = gastosPorDia[data];
-            // Verifica se há espaço suficiente na página atual, senão adiciona uma nova página
-            if (yPos + 10 > 270) {
+        const gastosOrdenados = [...(dados.gastos || [])]
+            .filter(gasto => parseLocalDate(gasto.data))
+            .sort((a, b) => parseLocalDate(a.data) - parseLocalDate(b.data));
+
+        gastosOrdenados.forEach(gasto => {
+            if (yPos + ROW_HEIGHT > PAGE_BOTTOM) {
                 doc.addPage();
                 yPos = 20;
-                doc.setFontSize(10);
-                doc.text("Data", 20, yPos);
-                doc.text("Valor Gasto", 100, yPos);
-                yPos += 10;
+                renderizarCabecalhoTabela();
             }
 
-            doc.text(data, 20, yPos);
-            doc.text(valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 100, yPos);
-            yPos += 10;
+            doc.text(formatarDataBR(gasto.data), COL_DATA, yPos);
+            doc.text(formatarCategoriaRelatorio(gasto.categoria), COL_TIPO, yPos);
+            doc.text(
+                Number(gasto.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+                COL_VALOR,
+                yPos,
+                { align: 'right' }
+            );
+            yPos += ROW_HEIGHT;
         });
 
         // Total de gastos
-        const totalGastos = Object.values(gastosPorDia).reduce((sum, valor) => sum + valor, 0);
+        const totalGastos = gastosOrdenados.reduce((sum, gasto) => sum + Number(gasto.valor), 0);
         yPos += 10;
         doc.setFontSize(12);
         if (yPos + 10 > 270) { // Verifica espaço para o total na página atual
