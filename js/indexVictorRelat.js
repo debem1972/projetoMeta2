@@ -595,15 +595,31 @@ document.addEventListener('DOMContentLoaded', async function () {
             yPos += ROW_HEIGHT;
         });
 
-        // Total de gastos
+        // Total de gastos e média diária (somente dias com lançamento)
         const totalGastos = gastosOrdenados.reduce((sum, gasto) => sum + Number(gasto.valor), 0);
+        const diasComGasto = new Set(gastosOrdenados.map(gasto => gasto.data)).size;
+        const mediaGastoDiario = diasComGasto > 0 ? totalGastos / diasComGasto : 0;
         yPos += 10;
         doc.setFontSize(12);
-        if (yPos + 10 > 270) { // Verifica espaço para o total na página atual
+        if (yPos + 10 > 270) {
             doc.addPage();
             yPos = 20;
         }
         doc.text(`Total de Gastos: ${totalGastos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 20, yPos);
+        yPos += 10;
+        if (yPos + 10 > 270) {
+            doc.addPage();
+            yPos = 20;
+        }
+        if (diasComGasto > 0) {
+            doc.text(
+                `Média de gasto diário (${diasComGasto} ${diasComGasto === 1 ? 'dia com gasto' : 'dias com gasto'}): ${mediaGastoDiario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
+                20,
+                yPos
+            );
+        } else {
+            doc.text('Média de gasto diário: sem lançamentos no período', 20, yPos);
+        }
         yPos += 20;
 
         // Inserir o gráfico
